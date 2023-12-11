@@ -4,6 +4,7 @@ import cors from "cors";
 
 //Rutas
 import routerUsers from "./routers/users_routes.js";
+import routerProjects from "./routers/projects_routes.js";
 
 const app = express();
 dotenv.config();
@@ -15,7 +16,7 @@ app.use(express.json())
 
 //Rutas
 app.use('/api', routerUsers);
-
+app.use('/api', routerProjects);
 // Endpoints
 
 app.get('/',(req,res)=>{

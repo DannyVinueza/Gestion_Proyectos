@@ -16,30 +16,26 @@ const login = async (req, res) => {
     const { email, contrasenia } = req.body
     const parametrosRequeridos = [email, contrasenia];
     if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
-    try{
+    try {
         const userBDD = await Users.findOne({
             where: {
                 email_user: email
             }
         })
-        
-        if (!userBDD) return res.status(404).json({ status:false, msg: "Lo sentimos, el usuario no se encuentra registrado" })
-        if (userBDD?.confirmEmail === false) return res.status(403).json({ status:false, msg: "Lo sentimos, debe verificar su cuenta" })
-        console.log("paso")
-    console.log(userBDD)
-    console.log(contrasenia)
-        const verificarContrasenia = await userBDD.matchPassword(contrasenia)
-        console.log("paso2")
-        console.log(verificarContrasenia)
-        if (!verificarContrasenia) return res.status(404).json({status: false, msg: "Lo sentimos, el password no es el correcto" })
 
-        const token = generarJWT(userBDD.id)
-        console.log(token)
-        const{full_name, university_name, cellphone_number, link_image, career, occupation} = userBDD
+        if (!userBDD) return res.status(404).json({ status: false, msg: "Lo sentimos, el usuario no se encuentra registrado" })
+
+        if (userBDD?.confirmarEmail === false) return res.status(403).json({ status: false, msg: "Lo sentimos, debe verificar su cuenta" })
+
+        const verificarContrasenia = await userBDD.matchPassword(contrasenia)
+        if (!verificarContrasenia) return res.status(404).json({ status: false, msg: "Lo sentimos, el password no es el correcto" })
+
+        const token = await generarJWT(userBDD.id)
+        const { full_name, university_name, cellphone_number, link_image, career, occupation } = userBDD
 
 
         res.status(200).json({
-            status:true,
+            status: true,
             token,
             nombreCompleto: full_name,
             universidad: university_name,
@@ -48,7 +44,7 @@ const login = async (req, res) => {
             carrera: career,
             ocupacion: occupation
         })
-    }catch(error){
+    } catch (error) {
         res.status(500).json({ status: false, errorA: 'Error interno del servidor', error })
     }
 }
@@ -58,6 +54,8 @@ const registro = async (req, res) => {
 
     const parametrosRequeridos = [email, contrasenia, nombres, universidad, carrera, numero_celular, ocupacion];
     if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
+
+    if (contrasenia.length < 8) return res.status(400).json({ status: false, msg: 'Por favor ingrese con una longitud mayor' });
 
     if (email.length > MAX_EMAIL_ANCHO ||
         contrasenia.length > MAX_PASSWORD_ANCHO ||
@@ -82,7 +80,7 @@ const registro = async (req, res) => {
 
     const token = nuevoUsuario.crearToken()
 
-    await sendMailToUser(email, token);
+    //await sendMailToUser(email, token);
 
     await Users.create({
         email_user: email,
@@ -126,7 +124,7 @@ const recuperarContrasenia = async (req, res) => {
 
         userBDD.token = token
 
-        await sendMailToRecoveryPassword(email, token)
+        //await sendMailToRecoveryPassword(email, token)
 
         await userBDD.save()
         res.status(200).json({ status: true, msg: "Revisa tu correo electronico para cambiar la contraseña" })
@@ -190,7 +188,7 @@ const nuevaContrasenia = async (req, res) => {
     try {
         if (contrasenia != confirmar_contrasenia) return res.status(404).json({ msg: "Lo sentimos, los passwords no coinciden" })
         if (!(token)) return res.status(400).json({ status: false, msg: "Lo sentimos, no se puede validar la cuenta" })
-        
+
         const userBDD = await Users.findOne({
             where: {
                 token
@@ -198,7 +196,7 @@ const nuevaContrasenia = async (req, res) => {
         })
 
         if (!userBDD || !userBDD.token) {
-            return res.status(404).json({status:false, msg: "Token inválido o cuenta ya validada" });
+            return res.status(404).json({ status: false, msg: "Token inválido o cuenta ya validada" });
         }
 
         userBDD.token = null
@@ -212,11 +210,56 @@ const nuevaContrasenia = async (req, res) => {
 
 }
 
+const actualizarPerfil = async (req, res) => {
+    const { id } = req.params;
+    const { universidad, carrera, numero_celular, link_imagen_perfil } = req.body;
+
+    if (!id) return res.status(404).json({ status: false, msg: 'Lo sentimos debe ser un id valido' })
+    const parametrosRequeridos = [universidad, carrera, numero_celular, link_imagen_perfil];
+    if (parametrosRequeridos.some(field => field === undefined)) return res.status(400).json({ status: false, msg: 'Debe utilizar todos los parametos requeridos' })
+
+    if (universidad.length > MAX_UNIVERSITY_NAME_ANCHO || numero_celular.length > MAX_CELLPHONE_NUMBER_ANCHO ||
+        link_imagen_perfil.length > MAX_LINK_IMAGE_ANCHO ||
+        carrera.length > MAX_CAREER_ANCHO
+    ) {
+        return res.status(400).json({ status: false, msg: 'Los datos exceden la longitud máxima permitida' });
+    }
+    try {
+        const userBDD = await Users.findByPk(id);
+        if (!userBDD) return res.status(404).json({ status: false, msg: 'Lo sentimos no existe el usuario' })
+
+        await userBDD.update({
+            university_name: universidad || userBDD.university_name,
+            cellphone_number: numero_celular || userBDD.cellphone_number,
+            link_image: link_imagen_perfil || userBDD.link_image,
+            career: carrera || userBDD.career,
+        })
+        return res.status(200).json({ status: true, msg: 'Perfil actualizado' })
+    } catch (error) {
+        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+    }
+}
+
+const listarPerfil = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        const userBDD = await Users.findByPk(id)
+        if (!userBDD) return res.status(400).json({ status: false, msg: 'El perfil no se encuentra' })
+
+        res.status(200).json({ status: true, usuario: userBDD })
+    } catch (error) {
+        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+    }
+}
+
 export {
     login,
     registro,
     confirmarEmail,
     recuperarContrasenia,
     comprobarConstraseniaToken,
-    nuevaContrasenia
+    nuevaContrasenia,
+    actualizarPerfil,
+    listarPerfil
 }

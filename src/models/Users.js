@@ -58,22 +58,27 @@ const Users = sequelize.define('users',{
 
 // Encriptacion de la password
 Users.prototype.encrypPassword = async function(password){
-const salt = await bcrypt.genSalt(5);
-const passwordEncryp = await bcrypt.hash(password, salt);
-return passwordEncryp;
+    try{
+        const salt = await bcrypt.genSalt(5);
+        const passwordEncryp = await bcrypt.hash(password, salt);
+        return passwordEncryp;
+    }catch(error){
+        return "error"
+    }
+    
 }
 
 //Verificar si el password ingresado es el mismo de la BD desencriptando
 Users.prototype.matchPassword = async function(password){
-    const response = await bcrypt.compare(password, this.password);
+    const response = await bcrypt.compare(password, this.password_user);
     return response;
 }
 
 // Generar token
 Users.prototype.crearToken = function(){
-const tokenGenerado = Math.random().toString(36).slice(2);
-this.token = tokenGenerado;
-return tokenGenerado;
+    const tokenGenerado = Math.random().toString(36).slice(2);
+    this.token = tokenGenerado;
+    return tokenGenerado;
 }
 
 export default Users;
