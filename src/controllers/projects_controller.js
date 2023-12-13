@@ -13,7 +13,15 @@ const MAX_BIBLIOGRAPHIC = 2000;
 const listarProyectos = async (req, res) => {
     try {
         const proyectos = await Projects.findAll();
-        res.status(200).json({ status: true, proyectos: proyectos })
+        const proyectosFormateados = proyectos.map(proyecto => {
+            return {
+                ...proyecto.get(),
+                general_objetive: proyecto.general_objetive.split('| ').filter(Boolean),
+                specific_object: proyecto.specific_object.split('| ').filter(Boolean),
+                bibliographic_references: proyecto.bibliographic_references.split('| ').filter(Boolean)
+            };
+        });
+        res.status(200).json({ status: true, proyectos: proyectosFormateados })
     } catch (error) {
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
@@ -25,8 +33,13 @@ const listarProyecto = async (req, res) => {
 
         const projBDD = await Projects.findByPk(id)
         if (!projBDD) return res.status(400).json({ status: false, msg: 'El proyecto no se encuentra' })
-
-        res.status(200).json({ status: true, proyecto: projBDD })
+        const proyectoFormateado = {
+            ...projBDD.get(),
+            general_objetive: projBDD.general_objetive.split('| ').filter(Boolean),
+            specific_object: projBDD.specific_object.split('| ').filter(Boolean),
+            bibliographic_references: projBDD.bibliographic_references.split('| ').filter(Boolean)
+        };
+        res.status(200).json({ status: true, proyecto: proyectoFormateado })
     } catch (error) {
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
@@ -50,15 +63,26 @@ const crearProyecto = async (req, res) => {
             alcance.length > MAX_SCOPE ||
             referencias_bibliograficas.length > MAX_BIBLIOGRAPHIC) return res.status(400).json({ status: false, msg: 'Los datos exceden la longitud máxima permitida' });
 
+        if (!Array.isArray(objetivos_generales) || !objetivos_generales.length ||
+            !Array.isArray(objetivos_especificos) || !objetivos_especificos.length ||
+            !Array.isArray(referencias_bibliograficas) || !referencias_bibliograficas.length) {
+            return res.status(400).json({ status: false, msg: 'Las listas no pueden estar vacías' });
+        }
+
+        const objetivo_general = Array.isArray(objetivos_generales) ? objetivos_generales.join("| ") : objetivos_generales;
+        const objetivo_especifico = Array.isArray(objetivos_especificos) ? objetivos_especificos.join("| ") : objetivos_especificos;
+        const referencias_biblio = Array.isArray(referencias_bibliograficas) ? referencias_bibliograficas.join("| ") : referencias_bibliograficas;
+
+
         await Projects.create({
             title_project: titulo,
             state: estado,
             description: descripcion,
             link_image: link_imagen,
-            general_objetive: objetivos_generales,
-            specific_object: objetivos_especificos,
+            general_objetive: objetivo_general,
+            specific_object: objetivo_especifico,
             scope: alcance,
-            bibliographic_references: referencias_bibliograficas
+            bibliographic_references: referencias_biblio
         })
         res.status(200).json({ status: true, msg: 'Proyecto creado' })
     } catch (error) {
@@ -67,15 +91,15 @@ const crearProyecto = async (req, res) => {
 }
 
 const actualizarProyecto = async (req, res) => {
-    try{
+    try {
         const { id } = req.params
         const { titulo, estado, descripcion, link_imagen, objetivos_generales,
             objetivos_especificos, alcance, referencias_bibliograficas } = req.body
-    
+
         const parametrosRequeridos = [titulo, estado, descripcion, link_imagen, objetivos_generales,
             objetivos_especificos, alcance, referencias_bibliograficas];
         if (parametrosRequeridos.some(field => field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
-    
+
         if (titulo.length > MAX_TITLE ||
             estado.toString().length > MAX_STATE ||
             descripcion.length > MAX_DESCRIPTION ||
@@ -84,38 +108,49 @@ const actualizarProyecto = async (req, res) => {
             objetivos_especificos.length > MAX_SPECIFIC_OBJECT ||
             alcance.length > MAX_SCOPE ||
             referencias_bibliograficas.length > MAX_BIBLIOGRAPHIC) return res.status(400).json({ status: false, msg: 'Los datos exceden la longitud máxima permitida' });
-        
+
+        if (!Array.isArray(objetivos_generales) || !objetivos_generales.length ||
+            !Array.isArray(objetivos_especificos) || !objetivos_especificos.length ||
+            !Array.isArray(referencias_bibliograficas) || !referencias_bibliograficas.length) {
+            return res.status(400).json({ status: false, msg: 'Las listas no pueden estar vacías' });
+        }
+
+        const objetivo_general = Array.isArray(objetivos_generales) ? objetivos_generales.join("| ") : objetivos_generales;
+        const objetivo_especifico = Array.isArray(objetivos_especificos) ? objetivos_especificos.join("| ") : objetivos_especificos;
+        const referencias_biblio = Array.isArray(referencias_bibliograficas) ? referencias_bibliograficas.join("| ") : referencias_bibliograficas;
+
+
         const projBDD = await Projects.findByPk(id)
-        if(!projBDD) return res.status(404).json({ status: false, msg: 'Lo sentimos no existe el proyecto' })
+        if (!projBDD) return res.status(404).json({ status: false, msg: 'Lo sentimos no existe el proyecto' })
 
         await projBDD.update({
             title_project: titulo || projBDD.title_project,
             state: estado || projBDD.state,
             description: descripcion || projBDD.descripcion,
             link_image: link_imagen || projBDD.link_image,
-            general_objetive: objetivos_generales || projBDD.general_objetive,
-            specific_object: objetivos_especificos || projBDD.specific_object,
+            general_objetive: objetivo_general || projBDD.general_objetive,
+            specific_object: objetivo_especifico || projBDD.specific_object,
             scope: alcance || projBDD.scope,
-            bibliographic_references: referencias_bibliograficas || projBDD.bibliographic_references
+            bibliographic_references: referencias_biblio || projBDD.bibliographic_references
         })
 
-        return res.status(200).json({status: true, msg:'Proyecto actualizado'})
-    }catch(error){
+        return res.status(200).json({ status: true, msg: 'Proyecto actualizado' })
+    } catch (error) {
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
-    
+
 }
 
 const eliminarProyecto = async (req, res) => {
-    try{
-        const {id} = req.params
+    try {
+        const { id } = req.params
         const projBDD = await Projects.findByPk(id)
 
-        if(!projBDD) return res.status(400).json({status: false, msg:'El proyecto no se encuentra registrado'})
+        if (!projBDD) return res.status(400).json({ status: false, msg: 'El proyecto no se encuentra registrado' })
 
         await projBDD.destroy()
-        res.status(200).json({status:true, msg: 'Se elimino el proyecto'})
-    }catch (error){
+        res.status(200).json({ status: true, msg: 'Se elimino el proyecto' })
+    } catch (error) {
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }

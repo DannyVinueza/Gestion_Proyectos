@@ -23,7 +23,7 @@ const sendMailToUser = async (userMail, token) => {
         html: `
     <h1>Sistema gestión de proyectos</h1>
     <hr>
-    <a href="http://localhost:3000/api/confirmar/${token}">Clic para confirmar tu cuenta</a>
+    <a href="https://gestor-proyectos.onrender.com/api/confirmar/${token}">Clic para confirmar tu cuenta</a>
     <hr>
     <footer>Grandote te da la Bienvenida!</footer>
     `
@@ -46,7 +46,7 @@ const sendMailToRecoveryPassword = async (userMail, token) => {
         html: `
         <h1>Sistema gestión de proyectos</h1>
         <hr>
-        <a href="http://localhost:3000/api/recuperar-contrasenia/${token}">Clic para reestablecer tu contraseña</a>
+        <a href="https://gestor-proyectos.onrender.com/api/recuperar-contrasenia/${token}">Clic para reestablecer tu contraseña</a>
         <hr>
         <footer>Grandote te da la Bienvenida!</footer>
         `
