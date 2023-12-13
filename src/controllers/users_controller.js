@@ -80,7 +80,7 @@ const registro = async (req, res) => {
 
     const token = nuevoUsuario.crearToken()
 
-    //await sendMailToUser(email, token);
+    await sendMailToUser(email, token);
 
     await Users.create({
         email_user: email,
@@ -124,7 +124,7 @@ const recuperarContrasenia = async (req, res) => {
 
         userBDD.token = token
 
-        //await sendMailToRecoveryPassword(email, token)
+        await sendMailToRecoveryPassword(email, token)
 
         await userBDD.save()
         res.status(200).json({ status: true, msg: "Revisa tu correo electronico para cambiar la contraseña" })
