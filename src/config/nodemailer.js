@@ -17,49 +17,36 @@ const transport = nodemailer.createTransport({
 // send mail with defined transport object
 const sendMailToUser = async (userMail, token) => {
     let info = await transport.sendMail({
-        from: 'admin@vet.com',
+        from: 'soporte@gestionproyectos.com',
         to: userMail,
         subject: "Verifica tu cuenta de correo electrónico",
         html: `
     <h1>Sistema gestión de proyectos</h1>
     <hr>
-    <a href="https://gestor-proyectos-gqhd.onrender.com/api/confirmar/${token}">Clic para confirmar tu cuenta</a>
+    <a href="${process.env.URLDOMAIN}/api/confirmar/${token}">Clic para confirmar tu cuenta</a>
     <hr>
-    <footer>Grandote te da la Bienvenida!</footer>
+    <footer>Bienvenido!</footer>
     `
     });
 }
 
-// html: `
-//     <h1>Sistema gestión de proyectos</h1>
-//     <hr>
-//     <a href="http://localhost:3000/api/confirmar/${token}">Clic para confirmar tu cuenta</a>
-//     <hr>
-//     <footer>Bienvenido!</footer>
-//     `
 // send mail with defined transport object
 const sendMailToRecoveryPassword = async (userMail, token) => {
     let info = await transport.sendMail({
-        from: 'admin@vet.com',
+        from: 'soporte@gestionproyectos.com',
         to: userMail,
         subject: "Correo para reestablecer tu contraseña",
         html: `
         <h1>Sistema gestión de proyectos</h1>
         <hr>
-        <a href="https://gestor-proyectos-gqhd.onrender.com/api/recuperar-contrasenia/${token}">Clic para reestablecer tu contraseña</a>
+        <a href="${process.env.URLDOMAIN}/api/recuperar-contrasenia/${token}">Clic para reestablecer tu contraseña</a>
         <hr>
-        <footer>Grandote te da la Bienvenida!</footer>
+        <footer>Bienvenido!</footer>
         `
     });
 }
 
-// html: `
-//     <h1>Sistema gestión de proyectos</h1>
-//     <hr>
-//     <a href="http://localhost:3000/api/recuperar-contrasenia/${token}">Clic para reestablecer tu contraseña</a>
-//     <hr>
-//     <footer>Bienvenido!</footer>
-//     `
+
 //Exportar la función
 export {
     sendMailToUser,

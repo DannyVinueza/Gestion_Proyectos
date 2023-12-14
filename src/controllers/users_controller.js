@@ -31,12 +31,13 @@ const login = async (req, res) => {
         if (!verificarContrasenia) return res.status(404).json({ status: false, msg: "Lo sentimos, el password no es el correcto" })
 
         const token = await generarJWT(userBDD.id)
-        const { full_name, university_name, cellphone_number, link_image, career, occupation } = userBDD
+        const { id, full_name, university_name, cellphone_number, link_image, career, occupation } = userBDD
 
 
         res.status(200).json({
             status: true,
             token,
+            id:id,
             nombreCompleto: full_name,
             universidad: university_name,
             celular: cellphone_number,

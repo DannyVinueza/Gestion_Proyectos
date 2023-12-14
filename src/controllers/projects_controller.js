@@ -1,5 +1,6 @@
 import Projects from "../models/Projects.js";
-import sequelize from "../database.js";
+import Projects_Users from "../models/Projects_Users.js";
+import Users from "../models/Users.js";
 
 const MAX_TITLE = 20;
 const MAX_STATE = 1;
@@ -33,11 +34,20 @@ const listarProyecto = async (req, res) => {
 
         const projBDD = await Projects.findByPk(id)
         if (!projBDD) return res.status(400).json({ status: false, msg: 'El proyecto no se encuentra' })
+
+        const usuariosAsociados = await Projects_Users.findAll({
+            where: { projectId: id },
+            include: [
+                { model: Users, attributes: ['id', 'full_name', 'email_user'] }
+            ]
+        });
+
         const proyectoFormateado = {
             ...projBDD.get(),
             general_objetive: projBDD.general_objetive.split('| ').filter(Boolean),
             specific_object: projBDD.specific_object.split('| ').filter(Boolean),
-            bibliographic_references: projBDD.bibliographic_references.split('| ').filter(Boolean)
+            bibliographic_references: projBDD.bibliographic_references.split('| ').filter(Boolean),
+            users: usuariosAsociados
         };
         res.status(200).json({ status: true, proyecto: proyectoFormateado })
     } catch (error) {
@@ -48,11 +58,14 @@ const listarProyecto = async (req, res) => {
 const crearProyecto = async (req, res) => {
     try {
         const { titulo, estado, descripcion, link_imagen, objetivos_generales,
-            objetivos_especificos, alcance, referencias_bibliograficas } = req.body
+            objetivos_especificos, alcance, referencias_bibliograficas, id_usuario} = req.body
 
         const parametrosRequeridos = [titulo, estado, descripcion, link_imagen, objetivos_generales,
-            objetivos_especificos, alcance, referencias_bibliograficas];
+            objetivos_especificos, alcance, referencias_bibliograficas, id_usuario];
         if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
+
+        const existeUser = await Users.findByPk(id_usuario)
+        if(!existeUser) return res.status(400).json({ status: false, msg: 'No se encuentra el usuario' });
 
         if (titulo.length > MAX_TITLE ||
             estado.toString().length > MAX_STATE ||
@@ -74,7 +87,7 @@ const crearProyecto = async (req, res) => {
         const referencias_biblio = Array.isArray(referencias_bibliograficas) ? referencias_bibliograficas.join("| ") : referencias_bibliograficas;
 
 
-        await Projects.create({
+        const nuevoProyecto = await Projects.create({
             title_project: titulo,
             state: estado,
             description: descripcion,
@@ -83,6 +96,12 @@ const crearProyecto = async (req, res) => {
             specific_object: objetivo_especifico,
             scope: alcance,
             bibliographic_references: referencias_biblio
+        })
+
+        await Projects_Users.create({
+            projectId: nuevoProyecto.id,
+            userId: id_usuario,
+            owner:1
         })
         res.status(200).json({ status: true, msg: 'Proyecto creado' })
     } catch (error) {
@@ -99,7 +118,7 @@ const actualizarProyecto = async (req, res) => {
         const parametrosRequeridos = [titulo, estado, descripcion, link_imagen, objetivos_generales,
             objetivos_especificos, alcance, referencias_bibliograficas];
         if (parametrosRequeridos.some(field => field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
-
+        
         if (titulo.length > MAX_TITLE ||
             estado.toString().length > MAX_STATE ||
             descripcion.length > MAX_DESCRIPTION ||

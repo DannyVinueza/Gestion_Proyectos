@@ -2,26 +2,35 @@ import Sequelize from 'sequelize';
 import dotenv from 'dotenv'
 
 dotenv.config()
-const sequelize = new Sequelize({
-    // host: process.env.HOST,
-    // dialect: process.env.DIALECTDB,
-    // port: process.env.PORTDB,
-    // username: process.env.USERNAMEDB,
-    // password: process.env.PASSWORDDB,
+
+let sequelize;
+if (process.env.PRODUCCION === 'true') {
+  console.log("Base de produccion")
+  sequelize = new Sequelize({
     host: process.env.HOST,
     dialect: process.env.DIALECTDB,
-    port:  process.env.PORTDB,
-    username:  process.env.USERNAMEDB,
-    password:  process.env.PASSWORDDB,
+    port: process.env.PORTDB,
+    username: process.env.USERNAMEDB,
+    password: process.env.PASSWORDDB,
     database: process.env.DATABASE,
     ssl: process.env.SSL,
-    dialectOptions:{
-        ssl:{
-            require:true
-        }
+    dialectOptions: {
+      ssl: {
+        require: true
+      }
     },
     logging: false,
-});
+  });
+} else {
+  console.log("Base de desarrollo")
+  sequelize = new Sequelize({
+    host: process.env.HOST,
+    dialect: process.env.DIALECTDB,
+    port: process.env.PORTDB,
+    username: process.env.USERNAMEDB,
+    password: process.env.PASSWORDDB,
+  });
+}
 
 sequelize.authenticate()
   .then(() => {
