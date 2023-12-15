@@ -13,17 +13,23 @@ const MAX_BIBLIOGRAPHIC = 2000;
 
 const listarProyectos = async (req, res) => {
     try {
-        const proyectos = await Projects.findAll();
-        const proyectosFormateados = proyectos.map(proyecto => {
-            return {
-                ...proyecto.get(),
-                general_objetive: proyecto.general_objetive.split('| ').filter(Boolean),
-                specific_object: proyecto.specific_object.split('| ').filter(Boolean),
-                bibliographic_references: proyecto.bibliographic_references.split('| ').filter(Boolean)
-            };
+        const proyectos = await Projects.findAll({
+            attributes:['title_project','description','link_image'],
+            include:[{
+                model:Users,
+                through: {
+                    model:Projects_Users,
+                    where:{
+                        owner:1
+                    },
+                    attributes: [] },
+                attributes:['full_name', 'link_image', 'occupation']
+            }]
         });
-        res.status(200).json({ status: true, proyectos: proyectosFormateados })
+        
+        res.status(200).json({ status: true, proyectos})
     } catch (error) {
+        console.log(error)
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }

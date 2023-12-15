@@ -39,5 +39,8 @@ const Projects_Users = sequelize.define('projects_users',{
 
 Projects_Users.belongsTo(Projects, { foreignKey: 'projectId' });
 Projects_Users.belongsTo(Users, { foreignKey: 'userId' });
+Projects.belongsToMany(Users, { through: Projects_Users, foreignKey: 'projectId' });
+Users.belongsToMany(Projects, { through: Projects_Users, foreignKey: 'userId' });
+
 
 export default Projects_Users;
