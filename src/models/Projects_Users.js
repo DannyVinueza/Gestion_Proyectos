@@ -4,8 +4,8 @@ import Projects from "./Projects.js"; // Asegúrate de importar el modelo de Pro
 import Users from "./Users.js"; // Asegúrate de importar el modelo de Users
 
 
-const Projects_Users = sequelize.define('projects_users',{
-    id:{
+const Projects_Users = sequelize.define('projects_users', {
+    id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
@@ -27,20 +27,20 @@ const Projects_Users = sequelize.define('projects_users',{
             key: 'id', // Reemplaza 'id' con el nombre del campo de la tabla Users
         },
     },
-    owner:{
+    owner: {
         type: DataTypes.INTEGER,
-        allowNull:false,
+        allowNull: false,
     },
 
-},{
+}, {
     tableName: 'projects_users',
     timestamps: false,
 })
 
 Projects_Users.belongsTo(Projects, { foreignKey: 'projectId' });
 Projects_Users.belongsTo(Users, { foreignKey: 'userId' });
-Projects.belongsToMany(Users, { through: Projects_Users, foreignKey: 'projectId' });
-Users.belongsToMany(Projects, { through: Projects_Users, foreignKey: 'userId' });
+Projects.belongsToMany(Users, { through: Projects_Users, foreignKey: 'projectId', onDelete: 'CASCADE' });
+Users.belongsToMany(Projects, { through: Projects_Users, foreignKey: 'userId', onDelete: 'CASCADE' });
 
 
 export default Projects_Users;

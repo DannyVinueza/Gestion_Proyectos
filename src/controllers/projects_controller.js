@@ -14,7 +14,7 @@ const MAX_BIBLIOGRAPHIC = 2000;
 const listarProyectos = async (req, res) => {
     try {
         const proyectos = await Projects.findAll({
-            attributes:['title_project','description','link_image'],
+            attributes:['id','title_project','description','link_image'],
             include:[{
                 model:Users,
                 through: {
@@ -23,10 +23,10 @@ const listarProyectos = async (req, res) => {
                         owner:1
                     },
                     attributes: [] },
-                attributes:['full_name', 'link_image', 'occupation']
+                attributes:['id','full_name', 'link_image', 'occupation']
             }]
         });
-        
+
         res.status(200).json({ status: true, proyectos})
     } catch (error) {
         console.log(error)
@@ -41,10 +41,19 @@ const listarProyecto = async (req, res) => {
         const projBDD = await Projects.findByPk(id)
         if (!projBDD) return res.status(400).json({ status: false, msg: 'El proyecto no se encuentra' })
 
-        const usuariosAsociados = await Projects_Users.findAll({
-            where: { projectId: id },
+        const usuarioPropietario = await Projects_Users.findAll({
+            where: { projectId: id, owner:1 },
+            attributes:[],
             include: [
-                { model: Users, attributes: ['id', 'full_name', 'email_user'] }
+                { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name'] }
+            ]
+        });
+
+        const colaboradoresProyecto = await Projects_Users.findAll({
+            where: { projectId: id, owner:0 },
+            attributes:[],
+            include: [
+                { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name'] }
             ]
         });
 
@@ -53,7 +62,8 @@ const listarProyecto = async (req, res) => {
             general_objetive: projBDD.general_objetive.split('| ').filter(Boolean),
             specific_object: projBDD.specific_object.split('| ').filter(Boolean),
             bibliographic_references: projBDD.bibliographic_references.split('| ').filter(Boolean),
-            users: usuariosAsociados
+            users: usuarioPropietario,
+            colaborators: colaboradoresProyecto
         };
         res.status(200).json({ status: true, proyecto: proyectoFormateado })
     } catch (error) {
