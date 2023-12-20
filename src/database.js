@@ -20,6 +20,7 @@ if (process.env.PRODUCCION === 'true') {
       }
     },
     logging: false,
+    timezone: 'America/Guayaquil',
   });
 } else {
   console.log("Base de desarrollo")
@@ -29,6 +30,7 @@ if (process.env.PRODUCCION === 'true') {
     port: process.env.PORTDB,
     username: process.env.USERNAMEDB,
     password: process.env.PASSWORDDB,
+    timezone: 'America/Guayaquil',
   });
 }
 

@@ -1,7 +1,8 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../database.js";
-import Projects from "./Projects.js"; // Asegúrate de importar el modelo de Projects
-import Users from "./Users.js"; // Asegúrate de importar el modelo de Users
+import Projects from "./Projects.js";
+import Users from "./Users.js";
+import Permissions from "./Permissions.js";
 
 
 const Projects_Users = sequelize.define('projects_users', {
@@ -31,16 +32,23 @@ const Projects_Users = sequelize.define('projects_users', {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-
+    permissionId:{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references:{
+            model:Permissions,
+            key: 'id'
+        }
+    }
 }, {
     tableName: 'projects_users',
-    timestamps: false,
+    timestamps: true,
 })
 
 Projects_Users.belongsTo(Projects, { foreignKey: 'projectId' });
 Projects_Users.belongsTo(Users, { foreignKey: 'userId' });
+Projects_Users.belongsTo(Permissions, {foreignKey: 'permissionId'});
 Projects.belongsToMany(Users, { through: Projects_Users, foreignKey: 'projectId', onDelete: 'CASCADE' });
 Users.belongsToMany(Projects, { through: Projects_Users, foreignKey: 'userId', onDelete: 'CASCADE' });
-
 
 export default Projects_Users;

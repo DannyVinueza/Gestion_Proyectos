@@ -53,7 +53,7 @@ const Users = sequelize.define('users',{
     }
 },{
     tableName: 'users',
-    timestamps: false,
+    timestamps: true,
 })
 
 // Encriptacion de la password

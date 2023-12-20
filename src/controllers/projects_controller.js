@@ -2,19 +2,19 @@ import Projects from "../models/Projects.js";
 import Projects_Users from "../models/Projects_Users.js";
 import Users from "../models/Users.js";
 
-const MAX_TITLE = 20;
+const MAX_TITLE = 200;
 const MAX_STATE = 1;
-const MAX_DESCRIPTION = 200;
+const MAX_DESCRIPTION = 300;
 const MAX_LINK_IMAGEN = 160;
 const MAX_GENERAL_OBJETIVE = 1024;
-const MAX_SPECIFIC_OBJECT = 160;
+const MAX_SPECIFIC_OBJECT = 1024;
 const MAX_SCOPE = 2000;
 const MAX_BIBLIOGRAPHIC = 2000;
 
 const listarProyectos = async (req, res) => {
     try {
         const proyectos = await Projects.findAll({
-            attributes:['id','title_project','description','link_image'],
+            attributes:['id','title_project','description','link_image','createdAt', 'updatedAt'],
             include:[{
                 model:Users,
                 through: {
@@ -71,6 +71,72 @@ const listarProyecto = async (req, res) => {
     }
 }
 
+const listarProyectosPorUsuario = async (req, res) =>{
+    try {
+        const proyectos = await Projects.findAll({
+            include:[{
+                model:Users,
+                through: {
+                    model:Projects_Users,
+                    where:{
+                        userId: req.user.id,
+                        owner:1
+                    },
+                    attributes: [] },
+                attributes:['id','full_name', 'link_image', 'occupation'],
+                required: true
+            }]
+        });
+
+        const proyectoFormateado = proyectos.map(proyecto =>{
+            return{
+                ...proyecto.get(),
+                general_objetive: proyecto.general_objetive.split('| ').filter(Boolean),
+                specific_object: proyecto.specific_object.split('| ').filter(Boolean),
+                bibliographic_references: proyecto.bibliographic_references.split('| ').filter(Boolean)
+            }
+        });
+
+        res.status(200).json({ status: true, proyectoFormateado})
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+    }
+}
+
+const listarProyectosColaboracion = async (req, res) =>{
+    try {
+        const proyectos = await Projects.findAll({
+            include:[{
+                model:Users,
+                through: {
+                    model:Projects_Users,
+                    where:{
+                        userId: req.user.id,
+                        owner:0
+                    },
+                    attributes: [] },
+                attributes:['id','full_name', 'link_image', 'occupation'],
+                required: true
+            }]
+        });
+
+        const proyectoFormateado = proyectos.map(proyecto =>{
+            return{
+                ...proyecto.get(),
+                general_objetive: proyecto.general_objetive.split('| ').filter(Boolean),
+                specific_object: proyecto.specific_object.split('| ').filter(Boolean),
+                bibliographic_references: proyecto.bibliographic_references.split('| ').filter(Boolean)
+            }
+        });
+
+        res.status(200).json({ status: true, proyectos_colaboracion: proyectoFormateado})
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+    }
+}
+
 const crearProyecto = async (req, res) => {
     try {
         const { titulo, estado, descripcion, link_imagen, objetivos_generales,
@@ -117,7 +183,8 @@ const crearProyecto = async (req, res) => {
         await Projects_Users.create({
             projectId: nuevoProyecto.id,
             userId: id_usuario,
-            owner:1
+            owner:1,
+            permissionId:1
         })
         res.status(200).json({ status: true, msg: 'Proyecto creado' })
     } catch (error) {
@@ -195,5 +262,7 @@ export {
     listarProyecto,
     crearProyecto,
     actualizarProyecto,
-    eliminarProyecto
+    eliminarProyecto,
+    listarProyectosPorUsuario,
+    listarProyectosColaboracion
 }

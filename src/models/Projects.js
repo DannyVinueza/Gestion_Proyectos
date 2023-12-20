@@ -9,7 +9,7 @@ const Projects = sequelize.define('projects',{
         allowNull: false,
     },
     title_project:{
-        type: DataTypes.STRING(20),
+        type: DataTypes.STRING(200),
         allowNull: false,
     },
     state:{
@@ -17,7 +17,7 @@ const Projects = sequelize.define('projects',{
         allowNull:false,
     },
     description:{
-        type: DataTypes.STRING(200),
+        type: DataTypes.STRING(300),
         allowNull: false,
     },
     link_image:{
@@ -42,7 +42,7 @@ const Projects = sequelize.define('projects',{
     }
 },{
     tableName: 'projects',
-    timestamps: false,
+    timestamps: true,
 })
 
 export default Projects;
