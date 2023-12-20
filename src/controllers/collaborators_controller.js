@@ -269,6 +269,17 @@ const listarNotificaciones = async (req, res) => {
     }
 }
 
+const listarPemrisos = async (req,res) => {
+    try {
+        const permisosBD = await Permissions.findAll();
+        res.status(200).json({ status: true, permisos: permisosBD })
+    }
+    catch (error) {
+        console.log(error)
+        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+    }
+}
+
 export {
     colaborarProyecto,
     aceptarSolicitudColaborador,
@@ -277,4 +288,5 @@ export {
     cambiarPermisos,
     crearNuevoPermiso,
     listarNotificaciones,
+    listarPemrisos
 }
