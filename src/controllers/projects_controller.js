@@ -14,20 +14,21 @@ const MAX_BIBLIOGRAPHIC = 2000;
 const listarProyectos = async (req, res) => {
     try {
         const proyectos = await Projects.findAll({
-            attributes:['id','title_project','description','link_image','createdAt', 'updatedAt'],
-            include:[{
-                model:Users,
+            attributes: ['id', 'title_project', 'description', 'link_image', 'createdAt', 'updatedAt'],
+            include: [{
+                model: Users,
                 through: {
-                    model:Projects_Users,
-                    where:{
-                        owner:1
+                    model: Projects_Users,
+                    where: {
+                        owner: 1
                     },
-                    attributes: [] },
-                attributes:['id','full_name', 'link_image', 'occupation']
+                    attributes: []
+                },
+                attributes: ['id', 'full_name', 'link_image', 'occupation']
             }]
         });
 
-        res.status(200).json({ status: true, proyectos})
+        res.status(200).json({ status: true, proyectos })
     } catch (error) {
         console.log(error)
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
@@ -42,16 +43,16 @@ const listarProyecto = async (req, res) => {
         if (!projBDD) return res.status(400).json({ status: false, msg: 'El proyecto no se encuentra' })
 
         const usuarioPropietario = await Projects_Users.findAll({
-            where: { projectId: id, owner:1 },
-            attributes:[],
+            where: { projectId: id, owner: 1 },
+            attributes: [],
             include: [
                 { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name'] }
             ]
         });
 
         const colaboradoresProyecto = await Projects_Users.findAll({
-            where: { projectId: id, owner:0 },
-            attributes:[],
+            where: { projectId: id, owner: 0 },
+            attributes: [],
             include: [
                 { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name'] }
             ]
@@ -71,25 +72,26 @@ const listarProyecto = async (req, res) => {
     }
 }
 
-const listarProyectosPorUsuario = async (req, res) =>{
+const listarProyectosPorUsuario = async (req, res) => {
     try {
         const proyectos = await Projects.findAll({
-            include:[{
-                model:Users,
+            include: [{
+                model: Users,
                 through: {
-                    model:Projects_Users,
-                    where:{
+                    model: Projects_Users,
+                    where: {
                         userId: req.user.id,
-                        owner:1
+                        owner: 1
                     },
-                    attributes: [] },
-                attributes:['id','full_name', 'link_image', 'occupation'],
+                    attributes: []
+                },
+                attributes: ['id', 'full_name', 'link_image', 'occupation'],
                 required: true
             }]
         });
 
-        const proyectoFormateado = proyectos.map(proyecto =>{
-            return{
+        const proyectoFormateado = proyectos.map(proyecto => {
+            return {
                 ...proyecto.get(),
                 general_objetive: proyecto.general_objetive.split('| ').filter(Boolean),
                 specific_object: proyecto.specific_object.split('| ').filter(Boolean),
@@ -97,40 +99,56 @@ const listarProyectosPorUsuario = async (req, res) =>{
             }
         });
 
-        res.status(200).json({ status: true, proyectoFormateado})
+        res.status(200).json({ status: true, proyectoFormateado })
     } catch (error) {
         console.log(error)
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }
 
-const listarProyectosColaboracion = async (req, res) =>{
+const listarProyectosColaboracion = async (req, res) => {
     try {
-        const proyectos = await Projects.findAll({
-            include:[{
-                model:Users,
+
+        const proyectosColaborador = await Projects.findAll({
+            include: [{
+                model: Users,
                 through: {
-                    model:Projects_Users,
-                    where:{
+                    model: Projects_Users,
+                    where: {
                         userId: req.user.id,
-                        owner:0
+                        owner: 0
                     },
-                    attributes: [] },
-                attributes:['id','full_name', 'link_image', 'occupation'],
+                    attributes: []
+                },
+                attributes: [],
                 required: true
-            }]
+            }],
+            attributes: ['id', 'title_project', 'state']
         });
 
-        const proyectoFormateado = proyectos.map(proyecto =>{
-            return{
+        const proyectosIds = proyectosColaborador.map((proyecto) => proyecto.id);
+
+        const prop = await Projects_Users.findAll({
+            where: {
+                projectId: proyectosIds,
+                owner: 1
+            },
+            include: [{
+                model: Users,
+                attributes: ['id', 'full_name', 'link_image', 'occupation'],
+            }],
+            attributes: ['id','projectId']
+        });
+
+        const proyectoFormateado = proyectosColaborador.map(proyecto => {
+            const propietarioInfo = prop.find(info => info.projectId === proyecto.id);
+            return {
                 ...proyecto.get(),
-                general_objetive: proyecto.general_objetive.split('| ').filter(Boolean),
-                specific_object: proyecto.specific_object.split('| ').filter(Boolean),
-                bibliographic_references: proyecto.bibliographic_references.split('| ').filter(Boolean)
-            }
+                propietario: propietarioInfo ? propietarioInfo.get() : null,
+            };
         });
 
-        res.status(200).json({ status: true, proyectos_colaboracion: proyectoFormateado})
+        res.status(200).json({ status: true, proyectos_colaboracion: proyectoFormateado });
     } catch (error) {
         console.log(error)
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
@@ -140,14 +158,14 @@ const listarProyectosColaboracion = async (req, res) =>{
 const crearProyecto = async (req, res) => {
     try {
         const { titulo, estado, descripcion, link_imagen, objetivos_generales,
-            objetivos_especificos, alcance, referencias_bibliograficas, id_usuario} = req.body
+            objetivos_especificos, alcance, referencias_bibliograficas, id_usuario } = req.body
 
         const parametrosRequeridos = [titulo, estado, descripcion, link_imagen, objetivos_generales,
             objetivos_especificos, alcance, referencias_bibliograficas, id_usuario];
         if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
 
         const existeUser = await Users.findByPk(id_usuario)
-        if(!existeUser) return res.status(400).json({ status: false, msg: 'No se encuentra el usuario' });
+        if (!existeUser) return res.status(400).json({ status: false, msg: 'No se encuentra el usuario' });
 
         if (titulo.length > MAX_TITLE ||
             estado.toString().length > MAX_STATE ||
@@ -183,8 +201,8 @@ const crearProyecto = async (req, res) => {
         await Projects_Users.create({
             projectId: nuevoProyecto.id,
             userId: id_usuario,
-            owner:1,
-            permissionId:1
+            owner: 1,
+            permissionId: 1
         })
         res.status(200).json({ status: true, msg: 'Proyecto creado' })
     } catch (error) {
@@ -201,7 +219,7 @@ const actualizarProyecto = async (req, res) => {
         const parametrosRequeridos = [titulo, estado, descripcion, link_imagen, objetivos_generales,
             objetivos_especificos, alcance, referencias_bibliograficas];
         if (parametrosRequeridos.some(field => field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
-        
+
         if (titulo.length > MAX_TITLE ||
             estado.toString().length > MAX_STATE ||
             descripcion.length > MAX_DESCRIPTION ||
