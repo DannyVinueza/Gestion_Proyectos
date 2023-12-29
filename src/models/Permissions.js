@@ -8,10 +8,6 @@ const Permissions = sequelize.define('permissions', {
         autoIncrement: true,
         allowNull: false,
     },
-    name_permission: {
-        type: DataTypes.STRING(32),
-        allowNull: false
-    },
     read_project: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

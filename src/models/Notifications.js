@@ -14,6 +14,10 @@ const Notifications = sequelize.define('notifications', {
         type: DataTypes.STRING(2000),
         allowNull: false
     },
+    owner_notification: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
 }, {
     tableName: 'notifications',
     timestamps: true,

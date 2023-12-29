@@ -65,6 +65,24 @@ const sendNotificationNewColaboradorProject = async (colabProject, ownerProject,
     })
 }
 
+const sendNotificationNewColaboradorProjectAdd = async (colabProject, ownerProject, project_title) => {
+    let info = await transport.sendMail({
+        from: 'soporte@gestionproyectos.com',
+        to: colabProject.email_user,
+        subject: "Nuevo colaborador",
+        html: `
+        <h1>Sistema gestión de proyectos -- Solicitud para colaboración de un proyecto</h1>
+        <hr>
+            <p>${ownerProject.full_name} / ${ownerProject.occupation}<br>
+            Ha solicitado que se una en el proyecto: ${project_title}<br>
+            </p>
+            <a href="${process.env.URLDOMAINWEB}">Clic para ir a la pantalla de aceptar o rechazar la solicitud</a>
+        <hr>
+        <footer>Gestión de proyectos</footer>
+        `
+    })
+}
+
 const aceptRejectionNotificationNewColaboradorProject = async (colabProject, project_title, status) => {
     let info = await transport.sendMail({
         from: 'soporte@gestionproyectos.com',
@@ -82,10 +100,29 @@ const aceptRejectionNotificationNewColaboradorProject = async (colabProject, pro
     })
 }
 
+const aceptRejectionNotificationNewColaboradorProjectAdd = async (colabProject, project_title, status, ownerEmail) => {
+    let info = await transport.sendMail({
+        from: 'soporte@gestionproyectos.com',
+        to: ownerEmail,
+        subject: "Notificación de colaboración",
+        html: `
+        <h1>Sistema gestión de proyectos -- Notificación de colaboración</h1>
+        <hr>
+            <p>${colabProject.full_name} / ${colabProject.occupation}<br>
+             ${status} en el proyecto: ${project_title}<br>
+            </p>
+        <hr>
+        <footer>Gestión de proyectos</footer>
+        `
+    })
+}
+
 //Exportar la función
 export {
     sendMailToUser,
     sendMailToRecoveryPassword,
     sendNotificationNewColaboradorProject,
-    aceptRejectionNotificationNewColaboradorProject
+    sendNotificationNewColaboradorProjectAdd,
+    aceptRejectionNotificationNewColaboradorProject,
+    aceptRejectionNotificationNewColaboradorProjectAdd
 }
