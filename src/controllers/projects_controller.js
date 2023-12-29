@@ -123,7 +123,7 @@ const listarProyectosColaboracion = async (req, res) => {
                 attributes: [],
                 required: true
             }],
-            attributes: ['id', 'title_project', 'state']
+            attributes: ['id', 'title_project', 'state', 'createdAt', 'updatedAt']
         });
 
         const proyectosIds = proyectosColaborador.map((proyecto) => proyecto.id);
