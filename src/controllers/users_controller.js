@@ -2,6 +2,7 @@ import Users from "../models/Users.js";
 import sequelize from "../database.js";
 import generarJWT from "../helpers/crearJWT.js";
 import { sendMailToUser, sendMailToRecoveryPassword } from "../config/nodemailer.js"
+import { Op } from 'sequelize';
 
 const MAX_EMAIL_ANCHO = 64;
 const MAX_PASSWORD_ANCHO = 32;
@@ -37,7 +38,7 @@ const login = async (req, res) => {
         res.status(200).json({
             status: true,
             token,
-            id:id,
+            id: id,
             nombreCompleto: full_name,
             universidad: university_name,
             celular: cellphone_number,
@@ -51,59 +52,73 @@ const login = async (req, res) => {
 }
 
 const registro = async (req, res) => {
-    const { email, contrasenia, nombres, universidad, carrera, numero_celular, ocupacion, link_imagen_perfil } = req.body;
+    try{
+        const { email, contrasenia, nombres, universidad, carrera, numero_celular, ocupacion, link_imagen_perfil } = req.body;
 
-    const parametrosRequeridos = [email, contrasenia, nombres, universidad, carrera, numero_celular, ocupacion];
-    if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
-
-    if (contrasenia.length < 8) return res.status(400).json({ status: false, msg: 'Por favor ingrese con una longitud mayor' });
-
-    if (email.length > MAX_EMAIL_ANCHO ||
-        contrasenia.length > MAX_PASSWORD_ANCHO ||
-        nombres.length > MAX_FULL_NAME_ANCHO ||
-        universidad.length > MAX_UNIVERSITY_NAME_ANCHO ||
-        numero_celular.length > MAX_CELLPHONE_NUMBER_ANCHO ||
-        link_imagen_perfil.length > MAX_LINK_IMAGE_ANCHO ||
-        carrera.length > MAX_CAREER_ANCHO ||
-        ocupacion.length > MAX_OCCUPATION_ANCHO) {
-        return res.status(400).json({ status: false, msg: 'Los datos exceden la longitud máxima permitida' });
-    }
-
-    const user = await Users.findOne({
-        where: {
-            email_user: email
+        const parametrosRequeridos = [email, contrasenia, nombres, universidad, carrera, numero_celular, ocupacion];
+        if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
+    
+        if (contrasenia.length < 8) return res.status(400).json({ status: false, msg: 'Por favor ingrese con una longitud mayor' });
+    
+        if (email.length > MAX_EMAIL_ANCHO ||
+            contrasenia.length > MAX_PASSWORD_ANCHO ||
+            nombres.length > MAX_FULL_NAME_ANCHO ||
+            universidad.length > MAX_UNIVERSITY_NAME_ANCHO ||
+            numero_celular.length > MAX_CELLPHONE_NUMBER_ANCHO ||
+            link_imagen_perfil.length > MAX_LINK_IMAGE_ANCHO ||
+            carrera.length > MAX_CAREER_ANCHO ||
+            ocupacion.length > MAX_OCCUPATION_ANCHO) {
+            return res.status(400).json({ status: false, msg: 'Los datos exceden la longitud máxima permitida' });
         }
-    })
-
-    if (user) return res.status(400).json({ status: false, msg: 'Lo sentimos el email ya se encuentra registrado' })
-
-    const nuevoUsuario = new Users(req.body);
-
-    const token = nuevoUsuario.crearToken()
-
-    await sendMailToUser(email, token);
-
-    await Users.create({
-        email_user: email,
-        password_user: await nuevoUsuario.encrypPassword(contrasenia),
-        full_name: nombres,
-        university_name: universidad,
-        cellphone_number: numero_celular,
-        link_image: link_imagen_perfil || "vaimgen_default",
-        career: carrera,
-        occupation: ocupacion,
-        token: token
-
-    })
-        .then(() => {
-            res.status(200).json({ status: true, msg: "Usuario registrado" })
+    
+        const user = await Users.findOne({
+            where: {
+                email_user: email
+            }
         })
-        .catch((error) => {
-            console.log("Error al registrar al nuevo usuario ", error)
-            res.status(500).json({ status: false, error: 'Error interno del servidor', error })
+    
+        if (user) return res.status(400).json({ status: false, msg: 'Lo sentimos el email ya se encuentra registrado' })
+    
+        const nuevoUsuario = new Users(req.body);
+    
+        const token = nuevoUsuario.crearToken()
+    
+        await Users.create({
+            email_user: email,
+            password_user: await nuevoUsuario.encrypPassword(contrasenia),
+            full_name: nombres,
+            university_name: universidad,
+            cellphone_number: numero_celular,
+            link_image: link_imagen_perfil || "vaimgen_default",
+            career: carrera,
+            occupation: ocupacion,
+            token: token
+    
         })
+
+        await sendMailToUser(email, token);
+        res.status(200).json({ status: true, msg: "Usuario registrado" })
+    }catch(error){
+        console.log("Error al registrar al nuevo usuario ", error)
+        res.status(500).json({ status: false, error: 'Error interno del servidor', error })
+    }
 }
 
+const listarUsuarios = async (req, res) => {
+    try {
+        const usersBD = await Users.findAll({
+            where: {
+                id: {
+                    [Op.ne]: req.user.id
+                }
+            },
+            attributes: ['id', 'full_name', 'email_user', 'university_name', 'occupation']
+        })
+        res.status(200).json({ status: true, users: usersBD })
+    } catch (error) {
+        res.status(500).json({ status: false, error: 'Error interno del servidor', error })
+    }
+}
 
 const recuperarContrasenia = async (req, res) => {
     const { email } = req.body
@@ -262,5 +277,6 @@ export {
     comprobarConstraseniaToken,
     nuevaContrasenia,
     actualizarPerfil,
-    listarPerfil
+    listarPerfil,
+    listarUsuarios
 }

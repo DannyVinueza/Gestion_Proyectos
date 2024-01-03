@@ -7,12 +7,16 @@ import {
         login, 
         nuevaContrasenia, 
         recuperarContrasenia, 
-        registro } from "../controllers/users_controller.js";
+        registro,
+        listarUsuarios 
+        } from "../controllers/users_controller.js";
+import verAutenticacion from "../middlewares/autenticacion.js";
 
 const router = Router();
 
 router.post('/login', login);
 router.get('/confirmar/:token', confirmarEmail);
+router.get('/usuarios', verAutenticacion, listarUsuarios);
 router.get('/recuperar-contrasenia/:token', comprobarConstraseniaToken)
 router.get('/perfil/:id', listarPerfil)
 router.post('/registrar', registro);
