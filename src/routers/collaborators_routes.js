@@ -9,7 +9,8 @@ import {
         eliminarColaborador,
         cambiarPermisos,
         listarNotificaciones,
-        listarPemrisos
+        listarPemrisos,
+        buscarProyectoOUser
         } from "../controllers/collaborators_controller.js";
 import verAutenticacion from "../middlewares/autenticacion.js";
 
@@ -17,6 +18,7 @@ const router = Router();
 
 router.get('/notificaciones/usuarios', verAutenticacion, listarNotificaciones)
 router.get('/listar-permisos', verAutenticacion, listarPemrisos)
+router.get('/buscar', verAutenticacion, buscarProyectoOUser)
 router.post('/colaborar-proyecto', verAutenticacion, colaborarProyecto)
 router.post('/invitar-colaborador-proyecto', verAutenticacion, colaborarProyectoAniadir)
 router.delete('/aceptar-colaboracion/:id', verAutenticacion, aceptarSolicitudColaborador)

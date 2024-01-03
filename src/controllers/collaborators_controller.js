@@ -9,6 +9,7 @@ import {
     aceptRejectionNotificationNewColaboradorProjectAdd
 } from "../config/nodemailer.js";
 import Notifications from "../models/Notifications.js";
+import { Op } from 'sequelize';
 
 const MAX_TITLE_PERMISSION = 32;
 
@@ -124,7 +125,7 @@ const aceptarSolicitudColaborador = async (req, res) => {
     try {
         const { id } = req.params
 
-        const notiBD = await Notifications.findByPk(id,{
+        const notiBD = await Notifications.findByPk(id, {
             include: [
                 {
                     model: Projects,
@@ -177,7 +178,7 @@ const aceptarSolicitudColaboradorAniadir = async (req, res) => {
     try {
         const { id } = req.params
 
-        const notiBD = await Notifications.findByPk(id,{
+        const notiBD = await Notifications.findByPk(id, {
             include: [
                 {
                     model: Projects,
@@ -230,7 +231,7 @@ const rechazarSolicitudColaborador = async (req, res) => {
     try {
         const { id } = req.params
 
-        const notiBD = await Notifications.findByPk(id,{
+        const notiBD = await Notifications.findByPk(id, {
             include: [
                 {
                     model: Projects,
@@ -267,7 +268,7 @@ const rechazarSolicitudColaboradorAniadir = async (req, res) => {
     try {
         const { id } = req.params
 
-        const notiBD = await Notifications.findByPk(id,{
+        const notiBD = await Notifications.findByPk(id, {
             include: [
                 {
                     model: Projects,
@@ -329,10 +330,10 @@ const cambiarPermisos = async (req, res) => {
         const { colabId, projectId } = req.params
 
         const { crear, actualizar, visualizar, eliminar } = req.body
-        const parametrosRequeridos = [ crear, actualizar, visualizar, eliminar];
+        const parametrosRequeridos = [crear, actualizar, visualizar, eliminar];
         if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
 
-        const permisos = [ crear, actualizar, visualizar, eliminar];
+        const permisos = [crear, actualizar, visualizar, eliminar];
         if (permisos.some(permiso => typeof permiso !== 'boolean')) {
             return res.status(400).json({ status: false, msg: 'Los permisos deben ser valores booleanos true para dar permiso y false para no dar el permiso' });
         }
@@ -366,7 +367,7 @@ const cambiarPermisos = async (req, res) => {
 const listarNotificaciones = async (req, res) => {
     try {
         const notificaciones = await Notifications.findAll({
-            where:{
+            where: {
                 owner_notification: req.user.id
             },
             include: [
@@ -394,7 +395,7 @@ const listarNotificaciones = async (req, res) => {
     }
 }
 
-const listarPemrisos = async (req,res) => {
+const listarPemrisos = async (req, res) => {
     try {
         const permisosBD = await Permissions.findAll();
         res.status(200).json({ status: true, permisos: permisosBD })
@@ -405,11 +406,46 @@ const listarPemrisos = async (req,res) => {
     }
 }
 
+const buscarProyectoOUser = async (req, res) => {
+    try {
+        const { busqueda } = req.body;
+        const busquedaSE = busqueda.trim();
+
+        if (!busquedaSE) {
+            return res.status(400).json({ status: false, message: 'Ingresa un término de búsqueda válido' });
+        }
+
+        const parametrosRequeridos = [busqueda];
+        if (parametrosRequeridos.some(field => field === undefined)) return res.status(400).json({ status: false, msg: 'Debe enviar el parametro busqueda' })
+
+        const usersResult = await Users.findAll({
+            where: {
+                full_name: {
+                    [Op.iLike]: `%${busquedaSE}%`
+                }
+            },
+            attributes: ['id', 'full_name', 'occupation']
+        });
+
+        const projectsResult = await Projects.findAll({
+            where: {
+                title_project: {
+                    [Op.iLike]: `%${busquedaSE}%`
+                }
+            },
+            attributes: ['id', 'title_project', 'state']
+        });
+
+        res.status(200).json({ status: true, users: usersResult, projects: projectsResult });
+    } catch (error) {
+
+    }
+}
+
 const verificarOCrearPermiso = async (permissionData) => {
     try {
         const { read_project, create_project, update_project, delete_project } = permissionData;
-        console.log("Estas aqui")
-console.log(permissionData)
+
         // Buscar un permiso existente con los mismos valores
         const existingPermission = await Permissions.findOne({
             where: {
@@ -419,8 +455,7 @@ console.log(permissionData)
                 delete_project,
             }
         });
-        console.log("Estas aqui 2")
-console.log(existingPermission)
+
         if (existingPermission) {
             return existingPermission.id; // Devuelve el ID del permiso existente
         } else {
@@ -448,5 +483,6 @@ export {
     eliminarColaborador,
     cambiarPermisos,
     listarNotificaciones,
-    listarPemrisos
+    listarPemrisos,
+    buscarProyectoOUser
 }
