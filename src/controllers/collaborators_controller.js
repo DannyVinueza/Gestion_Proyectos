@@ -9,7 +9,7 @@ import {
     aceptRejectionNotificationNewColaboradorProjectAdd
 } from "../config/nodemailer.js";
 import Notifications from "../models/Notifications.js";
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 
 const MAX_TITLE_PERMISSION = 32;
 
@@ -438,9 +438,52 @@ const buscarProyectoOUser = async (req, res) => {
 
         res.status(200).json({ status: true, users: usersResult, projects: projectsResult });
     } catch (error) {
-
+        console.log(error)
+        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }
+
+
+const estadisticasProyectos = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const resultados = await Projects_Users.findAll({
+            where: {
+                userId: userId,
+                owner: 1
+            },
+            include: [{
+                model: Projects,
+                attributes: ['state']
+            }]
+        });
+
+        const proyectosPorEstado = {
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0
+        };
+
+        resultados.forEach((row) => {
+            const estadoProyecto = row.project.state;
+            proyectosPorEstado[estadoProyecto]++;
+        });
+
+        const proyectosResult = Object.keys(proyectosPorEstado).map((key) => ({
+            estado: parseInt(key),
+            proyectos: proyectosPorEstado[key]
+        }));
+
+        res.status(200).json({ status: true, proyectos: proyectosResult });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ status: false, msg: "Error interno del servidor", error });
+    }
+};
+
+
 
 const verificarOCrearPermiso = async (permissionData) => {
     try {
@@ -484,5 +527,6 @@ export {
     cambiarPermisos,
     listarNotificaciones,
     listarPemrisos,
-    buscarProyectoOUser
+    buscarProyectoOUser,
+    estadisticasProyectos
 }
