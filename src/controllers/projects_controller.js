@@ -1,3 +1,4 @@
+import Permissions from "../models/Permissions.js";
 import Projects from "../models/Projects.js";
 import Projects_Users from "../models/Projects_Users.js";
 import Users from "../models/Users.js";
@@ -42,6 +43,13 @@ const listarProyecto = async (req, res) => {
         const projBDD = await Projects.findByPk(id)
         if (!projBDD) return res.status(400).json({ status: false, msg: 'El proyecto no se encuentra' })
 
+        const verPerm = await Projects_Users.findOne({
+            where:{
+                projectId: id,
+                userId: req.user.id,
+                owner:1
+            }
+        })
         const usuarioPropietario = await Projects_Users.findAll({
             where: { projectId: id, owner: 1 },
             attributes: [],
@@ -66,9 +74,35 @@ const listarProyecto = async (req, res) => {
             users: usuarioPropietario,
             colaborators: colaboradoresProyecto
         };
-        res.status(200).json({ status: true, proyecto: proyectoFormateado })
+
+        if(verPerm){
+            return res.status(200).json({ status: true, proyecto: proyectoFormateado })
+        }else{
+            const verPermColab = await Projects_Users.findOne({
+                where:{
+                    projectId: id,
+                    userId: req.user.id,
+                    owner:0
+                },
+                include:{
+                    model: Permissions
+                }
+            })
+
+            if(verPermColab && verPermColab.permission){
+                if(verPermColab.permission.read_project){
+                    return res.status(200).json({ status: true, proyecto: proyectoFormateado })
+                }else{
+                    return res.status(400).json({ status: false, msg:"No tiene los permisos suficientes para visualizar el proyecto"})
+                }
+            }else{
+                return res.status(400).json({ status: false, msg: 'No es colaborador ni propietario, para eliminar el proyecto' })
+            }
+        }
+
+        return res.status(200).json({ status: true, proyecto: proyectoFormateado })
     } catch (error) {
-        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+        return res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }
 
@@ -99,10 +133,10 @@ const listarProyectosPorUsuario = async (req, res) => {
             }
         });
 
-        res.status(200).json({ status: true, proyectoFormateado })
+        return res.status(200).json({ status: true, proyectoFormateado })
     } catch (error) {
         console.log(error)
-        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+        return res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }
 
@@ -148,10 +182,10 @@ const listarProyectosColaboracion = async (req, res) => {
             };
         });
 
-        res.status(200).json({ status: true, proyectos_colaboracion: proyectoFormateado });
+        return res.status(200).json({ status: true, proyectos_colaboracion: proyectoFormateado });
     } catch (error) {
         console.log(error)
-        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+        return res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }
 
@@ -204,9 +238,9 @@ const crearProyecto = async (req, res) => {
             owner: 1,
             permissionId: 1
         })
-        res.status(200).json({ status: true, msg: 'Proyecto creado' })
+        return res.status(200).json({ status: true, msg: 'Proyecto creado' })
     } catch (error) {
-        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+        return res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }
 
@@ -243,20 +277,60 @@ const actualizarProyecto = async (req, res) => {
         const projBDD = await Projects.findByPk(id)
         if (!projBDD) return res.status(404).json({ status: false, msg: 'Lo sentimos no existe el proyecto' })
 
-        await projBDD.update({
-            title_project: titulo || projBDD.title_project,
-            state: estado || projBDD.state,
-            description: descripcion || projBDD.descripcion,
-            link_image: link_imagen || projBDD.link_image,
-            general_objetive: objetivo_general || projBDD.general_objetive,
-            specific_object: objetivo_especifico || projBDD.specific_object,
-            scope: alcance || projBDD.scope,
-            bibliographic_references: referencias_biblio || projBDD.bibliographic_references
+        const verPerm = await Projects_Users.findOne({
+            where:{
+                projectId: id,
+                userId: req.user.id,
+                owner:1
+            }
         })
 
-        return res.status(200).json({ status: true, msg: 'Proyecto actualizado' })
+        if(verPerm){
+            await projBDD.update({
+                title_project: titulo || projBDD.title_project,
+                state: estado || projBDD.state,
+                description: descripcion || projBDD.descripcion,
+                link_image: link_imagen || projBDD.link_image,
+                general_objetive: objetivo_general || projBDD.general_objetive,
+                specific_object: objetivo_especifico || projBDD.specific_object,
+                scope: alcance || projBDD.scope,
+                bibliographic_references: referencias_biblio || projBDD.bibliographic_references
+            })
+            return res.status(200).json({ status: true, msg: 'Proyecto actualizado' })
+        }else{
+            const verPermColab = await Projects_Users.findOne({
+                where:{
+                    projectId: id,
+                    userId: req.user.id,
+                    owner:0
+                },
+                include:{
+                    model: Permissions
+                }
+            })
+
+            if(verPermColab && verPermColab.permission){
+                if(verPermColab.permission.delete_project){
+                    await projBDD.update({
+                        title_project: titulo || projBDD.title_project,
+                        state: estado || projBDD.state,
+                        description: descripcion || projBDD.descripcion,
+                        link_image: link_imagen || projBDD.link_image,
+                        general_objetive: objetivo_general || projBDD.general_objetive,
+                        specific_object: objetivo_especifico || projBDD.specific_object,
+                        scope: alcance || projBDD.scope,
+                        bibliographic_references: referencias_biblio || projBDD.bibliographic_references
+                    })
+                    return res.status(200).json({ status: true, msg: 'Proyecto actualizado' })
+                }else{
+                    return res.status(400).json({ status: false, msg:"No tiene los permisos suficientes para actualizar el proyecto"})
+                }
+            }else{
+                return res.status(400).json({ status: false, msg: 'No es colaborador ni propietario, para actualizar el proyecto' })
+            }
+        }
     } catch (error) {
-        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+        return res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 
 }
@@ -268,8 +342,40 @@ const eliminarProyecto = async (req, res) => {
 
         if (!projBDD) return res.status(400).json({ status: false, msg: 'El proyecto no se encuentra registrado' })
 
-        await projBDD.destroy()
-        res.status(200).json({ status: true, msg: 'Se elimino el proyecto' })
+        const verPerm = await Projects_Users.findOne({
+            where:{
+                projectId: id,
+                userId: req.user.id,
+                owner:1
+            }
+        })
+
+        if(verPerm){
+            await projBDD.destroy()
+            return res.status(200).json({ status: true, msg: 'Se elimino el proyecto' })
+        }else{
+            const verPermColab = await Projects_Users.findOne({
+                where:{
+                    projectId: id,
+                    userId: req.user.id,
+                    owner:0
+                },
+                include:{
+                    model: Permissions
+                }
+            })
+
+            if(verPermColab && verPermColab.permission){
+                if(verPermColab.permission.delete_project){
+                    await projBDD.destroy()
+                    return res.status(200).json({ status: false, msg:"Se elimino el proyecto"})
+                }else{
+                    return res.status(400).json({ status: false, msg:"No tiene los permisos suficientes para eliminar el proyecto"})
+                }
+            }else{
+                return res.status(400).json({ status: false, msg: 'No es colaborador ni propietario, para eliminar el proyecto' })
+            }
+        }
     } catch (error) {
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
