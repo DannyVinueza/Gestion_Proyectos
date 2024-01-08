@@ -12,6 +12,16 @@ const MAX_SPECIFIC_OBJECT = 1024;
 const MAX_SCOPE = 2000;
 const MAX_BIBLIOGRAPHIC = 2000;
 
+const tiposDeDatos = {
+    titulo: 'string',
+    estado: 'number',
+    descripcion: 'string',
+    link_imagen: 'string',
+    alcance: 'string'
+};
+
+const linkExpresion = /^https:\/\/.*\.(jpeg|jpg|png)$/; 
+
 const listarProyectos = async (req, res) => {
     try {
         const proyectos = await Projects.findAll({
@@ -99,9 +109,8 @@ const listarProyecto = async (req, res) => {
                 return res.status(400).json({ status: false, msg: 'No es colaborador ni propietario, para eliminar el proyecto' })
             }
         }
-
-        return res.status(200).json({ status: true, proyecto: proyectoFormateado })
     } catch (error) {
+        console.log(error)
         return res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }
@@ -191,12 +200,26 @@ const listarProyectosColaboracion = async (req, res) => {
 
 const crearProyecto = async (req, res) => {
     try {
-        const { titulo, estado, descripcion, link_imagen, objetivos_generales,
-            objetivos_especificos, alcance, referencias_bibliograficas, id_usuario } = req.body
+        let { titulo, estado, descripcion, link_imagen, objetivos_generales,
+            objetivos_especificos, alcance, referencias_bibliograficas } = req.body
 
+        const id_usuario = req.user.id
         const parametrosRequeridos = [titulo, estado, descripcion, link_imagen, objetivos_generales,
             objetivos_especificos, alcance, referencias_bibliograficas, id_usuario];
-        if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
+        if (parametrosRequeridos.some(field => field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
+
+        const parametrosVacios = [titulo, estado, descripcion, objetivos_generales,
+            objetivos_especificos, alcance, referencias_bibliograficas, id_usuario];
+        if (parametrosVacios.some(field => field === "")) return res.status(400).json({ status: false, msg: 'Debe llenar todos los campos' })
+
+        titulo = titulo.trim()
+        descripcion = descripcion.trim()
+        link_imagen = link_imagen.trim()
+        alcance = alcance.trim()
+
+        objetivos_generales = objetivos_generales.map(item => item.trim())
+        objetivos_especificos = objetivos_especificos.map(item => item.trim())
+        referencias_bibliograficas = referencias_bibliograficas.map(item => item.trim())
 
         const existeUser = await Users.findByPk(id_usuario)
         if (!existeUser) return res.status(400).json({ status: false, msg: 'No se encuentra el usuario' });
@@ -210,6 +233,15 @@ const crearProyecto = async (req, res) => {
             alcance.length > MAX_SCOPE ||
             referencias_bibliograficas.length > MAX_BIBLIOGRAPHIC) return res.status(400).json({ status: false, msg: 'Los datos exceden la longitud máxima permitida' });
 
+        for (const field in tiposDeDatos) {
+            if (typeof req.body[field] !== tiposDeDatos[field]) {
+                return res.status(400).json({
+                    status: false,
+                    msg: `El campo ${field} debe ser de tipo ${tiposDeDatos[field]}`
+                });
+            }
+        }
+
         if (!Array.isArray(objetivos_generales) || !objetivos_generales.length ||
             !Array.isArray(objetivos_especificos) || !objetivos_especificos.length ||
             !Array.isArray(referencias_bibliograficas) || !referencias_bibliograficas.length) {
@@ -219,13 +251,18 @@ const crearProyecto = async (req, res) => {
         const objetivo_general = Array.isArray(objetivos_generales) ? objetivos_generales.join("| ") : objetivos_generales;
         const objetivo_especifico = Array.isArray(objetivos_especificos) ? objetivos_especificos.join("| ") : objetivos_especificos;
         const referencias_biblio = Array.isArray(referencias_bibliograficas) ? referencias_bibliograficas.join("| ") : referencias_bibliograficas;
-
-
+        
+        if(link_imagen){
+            if(!linkExpresion.test(link_imagen)){
+                return res.status(400).json({status: false, msg:'Debe comenzar el link con un https:// y terminar con un formato (jpeg,jpg,png)'})
+            }
+        }
+        
         const nuevoProyecto = await Projects.create({
             title_project: titulo,
             state: estado,
             description: descripcion,
-            link_image: link_imagen,
+            link_image: link_imagen || 'default',
             general_objetive: objetivo_general,
             specific_object: objetivo_especifico,
             scope: alcance,
@@ -240,6 +277,7 @@ const crearProyecto = async (req, res) => {
         })
         return res.status(200).json({ status: true, msg: 'Proyecto creado' })
     } catch (error) {
+        console.log(error)
         return res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }
@@ -247,12 +285,25 @@ const crearProyecto = async (req, res) => {
 const actualizarProyecto = async (req, res) => {
     try {
         const { id } = req.params
-        const { titulo, estado, descripcion, link_imagen, objetivos_generales,
+        let { titulo, estado, descripcion, link_imagen, objetivos_generales,
             objetivos_especificos, alcance, referencias_bibliograficas } = req.body
 
         const parametrosRequeridos = [titulo, estado, descripcion, link_imagen, objetivos_generales,
             objetivos_especificos, alcance, referencias_bibliograficas];
-        if (parametrosRequeridos.some(field => field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
+        if (parametrosRequeridos.some(field => field === undefined)) {return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })}
+        
+        const parametrosVacios = [titulo, estado, descripcion, objetivos_generales,
+            objetivos_especificos, alcance, referencias_bibliograficas];
+        if (parametrosVacios.some(field => field === "")) {return res.status(400).json({ status: false, msg: 'Debe llenar todos los campos' })}
+        
+        titulo = titulo.trim()
+        descripcion = descripcion.trim()
+        link_imagen = link_imagen.trim()
+        alcance = alcance.trim()
+
+        objetivos_generales = objetivos_generales.map(item => item.trim())
+        objetivos_especificos = objetivos_especificos.map(item => item.trim())
+        referencias_bibliograficas = referencias_bibliograficas.map(item => item.trim())
 
         if (titulo.length > MAX_TITLE ||
             estado.toString().length > MAX_STATE ||
@@ -261,7 +312,16 @@ const actualizarProyecto = async (req, res) => {
             objetivos_generales.length > MAX_GENERAL_OBJETIVE ||
             objetivos_especificos.length > MAX_SPECIFIC_OBJECT ||
             alcance.length > MAX_SCOPE ||
-            referencias_bibliograficas.length > MAX_BIBLIOGRAPHIC) return res.status(400).json({ status: false, msg: 'Los datos exceden la longitud máxima permitida' });
+            referencias_bibliograficas.length > MAX_BIBLIOGRAPHIC) {return res.status(400).json({ status: false, msg: 'Los datos exceden la longitud máxima permitida' });}
+
+        for (const field in tiposDeDatos) {
+            if (typeof req.body[field] !== tiposDeDatos[field]) {
+                return res.status(400).json({
+                    status: false,
+                    msg: `El campo ${field} debe ser de tipo ${tiposDeDatos[field]}`
+                });
+            }
+        }
 
         if (!Array.isArray(objetivos_generales) || !objetivos_generales.length ||
             !Array.isArray(objetivos_especificos) || !objetivos_especificos.length ||
@@ -276,6 +336,12 @@ const actualizarProyecto = async (req, res) => {
 
         const projBDD = await Projects.findByPk(id)
         if (!projBDD) return res.status(404).json({ status: false, msg: 'Lo sentimos no existe el proyecto' })
+        
+        if(link_imagen != projBDD.link_image){
+            if(!linkExpresion.test(link_imagen)){
+                return res.status(400).json({status: false, msg:'Debe comenzar el link con un https:// y terminar con un formato (jpeg,jpg,png)'})
+            }
+        }
 
         const verPerm = await Projects_Users.findOne({
             where:{
@@ -330,6 +396,7 @@ const actualizarProyecto = async (req, res) => {
             }
         }
     } catch (error) {
+        console.log(error)
         return res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 
@@ -377,6 +444,7 @@ const eliminarProyecto = async (req, res) => {
             }
         }
     } catch (error) {
+        console.log(error)
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }

@@ -10,20 +10,18 @@ const transport = nodemailer.createTransport({
     auth: {
         user: process.env.USER_MAILTRAP,
         pass: process.env.PASS_MAILTRAP
-    },
-    service: 'gmail'
+    }
 })
 
 // send mail with defined transport object
-const sendMailToUser = async (userMail, token) => {
+const sendMailToUserTest = async (userMail, token) => {
     let info = await transport.sendMail({
         from: 'soporte@gestionproyectos.com',
         to: userMail,
-        subject: "Verifica tu cuenta de correo electrónico",
+        subject: "Verificar cuenta de correo electrónico",
         html: `
         <h1>Sistema gestión de proyectos</h1>
         <hr>
-        <p>Hola bienvenido al sistema de gestión de proyectos, por favor da click en el enlace de abajo para confirmar tu cuenta</p>
         <a href="${process.env.URLDOMAIN}/api/confirmar/${token}">Clic para confirmar tu cuenta</a>
         <hr>
         <footer>Bienvenido!</footer>
@@ -119,7 +117,7 @@ const aceptRejectionNotificationNewColaboradorProjectAdd = async (colabProject, 
 
 //Exportar la función
 export {
-    sendMailToUser,
+    sendMailToUserTest,
     sendMailToRecoveryPassword,
     sendNotificationNewColaboradorProject,
     sendNotificationNewColaboradorProjectAdd,
