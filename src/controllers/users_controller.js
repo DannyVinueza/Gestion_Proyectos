@@ -93,12 +93,6 @@ const registro = async (req, res) => {
             return res.status(400).json({ status: false, msg: 'Asegurese que el email sea valido' });
         }
 
-        if(link_imagen_perfil){
-            if(!linkExpresion.test(link_imagen_perfil)){
-                return res.status(400).json({status: false, msg:'Debe comenzar el link con un https:// y terminar con un formato (jpeg,jpg,png)'})
-            }
-        }
-
         if(!regexLetrasLAcentuadas.test(nombres)){
             return res.status(400).json({status: false, msg:'Asegurese de no ingresar en el campo nombres con numeros y/o caracteres especiales'})
         }
@@ -296,12 +290,6 @@ const actualizarPerfil = async (req, res) => {
     try {
         const userBDD = await Users.findByPk(id);
         if (!userBDD) return res.status(404).json({ status: false, msg: 'Lo sentimos no existe el usuario' })
-
-        if(link_imagen_perfil != userBDD.link_image){
-            if(!linkExpresion.test(link_imagen_perfil)){
-                return res.status(400).json({status: false, msg:'Debe comenzar el link con un https:// y terminar con un formato (jpeg,jpg,png)'})
-            }
-        }
 
         if(!regexLetrasYNumerosLAcentuadas.test(universidad) || !regexLetrasYNumerosLAcentuadas.test(carrera)){
             return res.status(400).json({status: false, msg:'Asegurese de no ingresar en el campo universidad, carrera con caracteres especiales'})

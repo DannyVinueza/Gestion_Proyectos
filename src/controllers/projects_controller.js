@@ -252,12 +252,6 @@ const crearProyecto = async (req, res) => {
         const objetivo_especifico = Array.isArray(objetivos_especificos) ? objetivos_especificos.join("| ") : objetivos_especificos;
         const referencias_biblio = Array.isArray(referencias_bibliograficas) ? referencias_bibliograficas.join("| ") : referencias_bibliograficas;
         
-        if(link_imagen){
-            if(!linkExpresion.test(link_imagen)){
-                return res.status(400).json({status: false, msg:'Debe comenzar el link con un https:// y terminar con un formato (jpeg,jpg,png)'})
-            }
-        }
-        
         const nuevoProyecto = await Projects.create({
             title_project: titulo,
             state: estado,
@@ -337,12 +331,6 @@ const actualizarProyecto = async (req, res) => {
         const projBDD = await Projects.findByPk(id)
         if (!projBDD) return res.status(404).json({ status: false, msg: 'Lo sentimos no existe el proyecto' })
         
-        if(link_imagen != projBDD.link_image){
-            if(!linkExpresion.test(link_imagen)){
-                return res.status(400).json({status: false, msg:'Debe comenzar el link con un https:// y terminar con un formato (jpeg,jpg,png)'})
-            }
-        }
-
         const verPerm = await Projects_Users.findOne({
             where:{
                 projectId: id,
