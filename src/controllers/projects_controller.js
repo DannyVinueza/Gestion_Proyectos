@@ -64,7 +64,7 @@ const listarProyecto = async (req, res) => {
             where: { projectId: id, owner: 1 },
             attributes: [],
             include: [
-                { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name'] }
+                { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name', 'career'] }
             ]
         });
 
@@ -72,7 +72,7 @@ const listarProyecto = async (req, res) => {
             where: { projectId: id, owner: 0 },
             attributes: [],
             include: [
-                { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name'] }
+                { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name', 'career'] }
             ]
         });
 

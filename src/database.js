@@ -1,5 +1,6 @@
 import Sequelize from 'sequelize';
 import dotenv from 'dotenv'
+import pg from 'pg'
 
 dotenv.config()
 
@@ -9,6 +10,7 @@ if (process.env.PRODUCCION === 'true') {
   sequelize = new Sequelize({
     host: process.env.HOST,
     dialect: process.env.DIALECTDB,
+    dialectModule: pg,
     port: process.env.PORTDB,
     username: process.env.USERNAMEDB,
     password: process.env.PASSWORDDB,
