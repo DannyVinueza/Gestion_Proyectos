@@ -16,7 +16,7 @@ const linkExpresion = /^https:\/\/.*\.(jpeg|jpg|png)$/;
 const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const regexLetrasLAcentuadas = /^[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF\s']+$/;
 const regexLetrasYNumerosLAcentuadas = /^[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF0-9\s']+$/;
-const regexTelefonoEcu = /^\+593[1-9]\d{1,2}\d{6}$/;
+const regexTelefonoEcu = /^\593[1-9]\d{1,2}\d{6}$/;
 
 const login = async (req, res) => {
     const { email, contrasenia } = req.body
