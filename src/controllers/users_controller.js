@@ -156,7 +156,7 @@ const listarUsuarios = async (req, res) => {
 }
 
 const recuperarContrasenia = async (req, res) => {
-    const { email } = req.body
+    let { email } = req.body
 
     const parametrosRequeridos = [email]
 
@@ -235,7 +235,7 @@ const confirmarEmail = async (req, res) => {
 
 const nuevaContrasenia = async (req, res) => {
     const { token } = req.params;
-    const { contrasenia, confirmar_contrasenia } = req.body
+    let { contrasenia, confirmar_contrasenia } = req.body
 
     const parametrosRequeridos = [contrasenia, confirmar_contrasenia]
 

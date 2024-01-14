@@ -64,7 +64,7 @@ const listarProyecto = async (req, res) => {
             where: { projectId: id, owner: 1 },
             attributes: [],
             include: [
-                { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name', 'career'] }
+                { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name', 'career', 'link_image'] }
             ]
         });
 
@@ -72,7 +72,7 @@ const listarProyecto = async (req, res) => {
             where: { projectId: id, owner: 0 },
             attributes: [],
             include: [
-                { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name', 'career'] }
+                { model: Users, attributes: ['id', 'full_name', 'occupation', 'university_name', 'career', 'link_image'] }
             ]
         });
 
@@ -106,7 +106,7 @@ const listarProyecto = async (req, res) => {
                     return res.status(400).json({ status: false, msg:"No tiene los permisos suficientes para visualizar el proyecto"})
                 }
             }else{
-                return res.status(400).json({ status: false, msg: 'No es colaborador ni propietario, para eliminar el proyecto' })
+                return res.status(400).json({ status: false, msg: 'No es colaborador ni propietario, para visualizar el proyecto' })
             }
         }
     } catch (error) {
