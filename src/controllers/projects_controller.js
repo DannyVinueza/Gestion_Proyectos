@@ -52,14 +52,7 @@ const listarProyecto = async (req, res) => {
 
         const projBDD = await Projects.findByPk(id)
         if (!projBDD) return res.status(400).json({ status: false, msg: 'El proyecto no se encuentra' })
-
-        const verPerm = await Projects_Users.findOne({
-            where:{
-                projectId: id,
-                userId: req.user.id,
-                owner:1
-            }
-        })
+        
         const usuarioPropietario = await Projects_Users.findAll({
             where: { projectId: id, owner: 1 },
             attributes: [],
@@ -85,30 +78,7 @@ const listarProyecto = async (req, res) => {
             colaborators: colaboradoresProyecto
         };
 
-        if(verPerm){
-            return res.status(200).json({ status: true, proyecto: proyectoFormateado })
-        }else{
-            const verPermColab = await Projects_Users.findOne({
-                where:{
-                    projectId: id,
-                    userId: req.user.id,
-                    owner:0
-                },
-                include:{
-                    model: Permissions
-                }
-            })
-
-            if(verPermColab && verPermColab.permission){
-                if(verPermColab.permission.read_project){
-                    return res.status(200).json({ status: true, proyecto: proyectoFormateado })
-                }else{
-                    return res.status(400).json({ status: false, msg:"No tiene los permisos suficientes para visualizar el proyecto"})
-                }
-            }else{
-                return res.status(400).json({ status: false, msg: 'No es colaborador ni propietario, para visualizar el proyecto' })
-            }
-        }
+        return res.status(200).json({ status: true, proyecto: proyectoFormateado })
     } catch (error) {
         console.log(error)
         return res.status(500).json({ status: false, msg: "Error interno del servidor", error })
