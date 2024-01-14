@@ -30,9 +30,6 @@ const listarProyectos = async (req, res) => {
                 model: Users,
                 through: {
                     model: Projects_Users,
-                    where: {
-                        owner: 1
-                    },
                     attributes: []
                 },
                 attributes: ['id', 'full_name', 'link_image', 'occupation']
