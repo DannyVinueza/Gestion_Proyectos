@@ -387,7 +387,21 @@ const listarNotificaciones = async (req, res) => {
                 }
             ]
         });
-        res.status(200).json({ status: true, notificaciones })
+
+        const notificacionesFormateadas = notificaciones.map(notificacion => {
+            let tipo;
+            if (notificacion.owner_userId === notificacion.owner_notification) {
+                tipo = 'peticion';
+            } else if (notificacion.collaborator_userId === notificacion.owner_notification) {
+                tipo = 'invitacion';
+            }
+
+            return {
+                ...notificacion.get(),
+                tipo
+            };
+        });
+        res.status(200).json({ status: true, notificaciones: notificacionesFormateadas })
     }
     catch (error) {
         console.log(error)
@@ -483,6 +497,37 @@ const estadisticasProyectos = async (req, res) => {
     }
 };
 
+const verPermisoColaborador = async (req, res) => {
+    try {
+        const { colabId, projectId } = req.params
+        const projectUsers = await Projects_Users.findOne({
+            where: {
+                projectId: projectId,
+                userId: colabId,
+                owner: 0
+            },
+            include:[
+                {
+                    model: Permissions,
+                    attributes: ['update_project', 'delete_project']
+                },
+                {
+                    model: Users,
+                    attributes: ['id', 'full_name']
+                }
+            ],
+            attributes: ['permissionId']
+        })
+
+        if (!projectUsers) return res.status(400).json({ status: false, msg: 'No se encontro el colaborador asociado al proyecto' })
+
+        res.status(200).json({ status: true, permiso: projectUsers });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ status: false, msg: "Error interno del servidor", error });
+    }
+}
+
 
 
 const verificarOCrearPermiso = async (permissionData) => {
@@ -528,5 +573,6 @@ export {
     listarNotificaciones,
     listarPemrisos,
     buscarProyectoOUser,
-    estadisticasProyectos
+    estadisticasProyectos,
+    verPermisoColaborador
 }

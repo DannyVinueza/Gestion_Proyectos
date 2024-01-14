@@ -11,7 +11,8 @@ import {
         listarNotificaciones,
         listarPemrisos,
         buscarProyectoOUser,
-        estadisticasProyectos
+        estadisticasProyectos,
+        verPermisoColaborador
         } from "../controllers/collaborators_controller.js";
 import verAutenticacion from "../middlewares/autenticacion.js";
 
@@ -29,5 +30,6 @@ router.delete('/rechazar-colaboracion/:id', verAutenticacion, rechazarSolicitudC
 router.delete('/rechazar-invitacion/:id', verAutenticacion, rechazarSolicitudColaboradorAniadir)
 router.delete('/eliminar-colaborador/:colabId/:projectId', verAutenticacion, eliminarColaborador)
 router.put('/cambiar-permiso/:colabId/:projectId', verAutenticacion, cambiarPermisos)
+router.get('/ver-permiso/:colabId/:projectId', verAutenticacion, verPermisoColaborador)
 
 export default router;
