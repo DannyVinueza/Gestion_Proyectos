@@ -38,7 +38,7 @@ const sendMailToRecoveryPassword = async (userMail, token) => {
         html: `
         <h1>Sistema gestión de proyectos</h1>
         <hr>
-        <a href="${process.env.URLDOMAIN}/api/recuperar-contrasenia/${token}">Clic para reestablecer tu contraseña</a>
+        <a href="${process.env.URLFRONTENDRECUPERARCONTRASENIA}/${token}">Clic para reestablecer tu contraseña</a>
         <hr>
         <footer>Bienvenido!</footer>
         `
@@ -56,7 +56,7 @@ const sendNotificationNewColaboradorProject = async (colabProject, ownerProject,
             <p>${colabProject.full_name} / ${colabProject.occupation}<br>
             Te a pedido unirse en tu proyecto: ${project_title}<br>
             </p>
-            <a href="${process.env.URLDOMAINWEB}">Clic para ir a la pantalla de aceptar o rechazar la solicitud</a>
+            <a href="${process.env.URLDOMAINWEB}">Clic para ir a la pagina web</a>
         <hr>
         <footer>Gestión de proyectos</footer>
         `
@@ -74,7 +74,7 @@ const sendNotificationNewColaboradorProjectAdd = async (colabProject, ownerProje
             <p>${ownerProject.full_name} / ${ownerProject.occupation}<br>
             Ha solicitado que se una en el proyecto: ${project_title}<br>
             </p>
-            <a href="${process.env.URLDOMAINWEB}">Clic para ir a la pantalla de aceptar o rechazar la solicitud</a>
+            <a href="${process.env.URLDOMAINWEB}">Clic para ir a la pagina web</a>
         <hr>
         <footer>Gestión de proyectos</footer>
         `

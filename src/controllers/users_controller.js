@@ -16,7 +16,7 @@ const linkExpresion = /^https:\/\/.*\.(jpeg|jpg|png)$/;
 const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const regexLetrasLAcentuadas = /^[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF\s']+$/;
 const regexLetrasYNumerosLAcentuadas = /^[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF0-9\s']+$/;
-const regexTelefonoEcu = /^\593[1-9]\d{1,2}\d{6}$/;
+const regexTelefonoEcu = /^5939\d{8}$/;
 
 const login = async (req, res) => {
     const { email, contrasenia } = req.body
@@ -34,7 +34,7 @@ const login = async (req, res) => {
         if (userBDD?.confirmarEmail === false) return res.status(403).json({ status: false, msg: "Lo sentimos, debe verificar su cuenta" })
 
         const verificarContrasenia = await userBDD.matchPassword(contrasenia)
-        if (!verificarContrasenia) return res.status(404).json({ status: false, msg: "Lo sentimos, el password no es el correcto" })
+        if (!verificarContrasenia) return res.status(404).json({ status: false, msg: "Lo sentimos, la contrasenia no es el correcto" })
 
         const token = await generarJWT(userBDD.id)
         const { id, full_name, university_name, cellphone_number, link_image, career, occupation } = userBDD
@@ -75,7 +75,7 @@ const registro = async (req, res) => {
         ocupacion = ocupacion.trim()
         link_imagen_perfil = link_imagen_perfil.trim()
 
-        if (contrasenia.length < 8) return res.status(400).json({ status: false, msg: 'Por favor ingrese con una longitud mayor' });
+        if (contrasenia.length < 8) return res.status(400).json({ status: false, msg: 'Por favor ingrese con una longitud mayor igual a 8 caracteres en la contrasenia' });
     
         if (email.length > MAX_EMAIL_ANCHO ||
             contrasenia.length > MAX_PASSWORD_ANCHO ||
@@ -102,7 +102,7 @@ const registro = async (req, res) => {
         }
 
         if(!regexTelefonoEcu.test(numero_celular)){
-            return res.status(400).json({status: false, msg:'Asegurese de ingresar en el campo numero_celular un número valido ejem: (+593978148778)'}) 
+            return res.status(400).json({status: false, msg:'Asegurese de ingresar en el campo numero_celular un número valido ejem: (593978148778)'}) 
         }
 
         const user = await Users.findOne({
@@ -243,7 +243,14 @@ const nuevaContrasenia = async (req, res) => {
     try {
         contrasenia = contrasenia.trim()
         confirmar_contrasenia = confirmar_contrasenia.trim()
+        if (contrasenia.length < 8 || confirmar_contrasenia.length < 8) return res.status(400).json({ status: false, msg: 'Por favor ingrese con una longitud mayor igual a 8 caracteres en la contrasenia' });
+        
+        if (contrasenia.length > MAX_PASSWORD_ANCHO || confirmar_contrasenia.length > MAX_PASSWORD_ANCHO) {
+            return res.status(400).json({ status: false, msg: 'La contrasenia excede la longitud máxima permitida' });
+        }
+        
         if (contrasenia != confirmar_contrasenia) return res.status(404).json({ msg: "Lo sentimos, los passwords no coinciden" })
+
         if (!(token)) return res.status(400).json({ status: false, msg: "Lo sentimos, no se puede validar la cuenta" })
 
         const userBDD = await Users.findOne({
@@ -260,12 +267,11 @@ const nuevaContrasenia = async (req, res) => {
         userBDD.password_user = await userBDD.encrypPassword(contrasenia)
 
         await userBDD.save()
-        res.status(200).json({ msg: "Felicitaciones, ya puedes iniciar sesión con tu nuevo password" })
+        res.status(200).json({ status: true, msg: "Felicitaciones, ya puedes iniciar sesión con tu nuevo password" })
     } catch (error) {
         console.log(error)
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
-
 }
 
 const actualizarPerfil = async (req, res) => {
@@ -325,6 +331,50 @@ const listarPerfil = async (req, res) => {
     }
 }
 
+const actualizarContrasenia = async (req, res) => {
+    let { contrasenia_anterior, contrasenia_nueva, confirmar_contrasenia_nueva } = req.body
+
+    const parametrosRequeridos = [contrasenia_anterior, contrasenia_nueva, confirmar_contrasenia_nueva]
+
+    if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los campos' })
+    try {
+        contrasenia_anterior = contrasenia_anterior.trim()
+        contrasenia_nueva = contrasenia_nueva.trim()
+        confirmar_contrasenia_nueva = confirmar_contrasenia_nueva.trim()
+
+        if (contrasenia_anterior.length < 8 || contrasenia_nueva.length < 8 || confirmar_contrasenia_nueva.length < 8) return res.status(400).json({ status: false, msg: 'Por favor ingrese con una longitud mayor igual a 8 caracteres en la contrasenia' });
+        
+        if (contrasenia_anterior.length > MAX_PASSWORD_ANCHO || contrasenia_nueva.length > MAX_PASSWORD_ANCHO || confirmar_contrasenia_nueva.length > MAX_PASSWORD_ANCHO) {
+            return res.status(400).json({ status: false, msg: 'La contrasenia excede la longitud máxima permitida' });
+        }
+        
+        const userBDD = await Users.findOne({
+            where: {
+                id: req.user.id
+            }
+        })
+
+        if (!userBDD) {
+            return res.status(404).json({ status: false, msg: "Lo sentimos el usuario no existe" });
+        }
+
+        const verificarContrasenia = await userBDD.matchPassword(contrasenia_anterior)
+        if (!verificarContrasenia) return res.status(404).json({ status: false, msg: "Lo sentimos, la contrasenia no es el correcto" })
+
+        if (contrasenia_nueva != confirmar_contrasenia_nueva) return res.status(404).json({ msg: "Lo sentimos, las contrasenias no coinciden" })
+
+        if(userBDD.password_user)
+
+        userBDD.password_user = await userBDD.encrypPassword(contrasenia_nueva)
+
+        await userBDD.save()
+        res.status(200).json({ status: true, msg: "Felicitaciones, ya puedes iniciar sesión con tu nuevo password" })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+    }
+}
+
 export {
     login,
     registro,
@@ -333,6 +383,7 @@ export {
     comprobarConstraseniaToken,
     nuevaContrasenia,
     actualizarPerfil,
+    actualizarContrasenia,
     listarPerfil,
     listarUsuarios
 }

@@ -5,7 +5,8 @@ import {
         confirmarEmail, 
         listarPerfil, 
         login, 
-        nuevaContrasenia, 
+        nuevaContrasenia,
+        actualizarContrasenia, 
         recuperarContrasenia, 
         registro,
         listarUsuarios 
@@ -21,7 +22,8 @@ router.get('/recuperar-contrasenia/:token', comprobarConstraseniaToken)
 router.get('/perfil/:id', verAutenticacion, listarPerfil)
 router.post('/registrar', registro);
 router.post('/recuperar-contrasenia', recuperarContrasenia);
-router.post('/nueva-contrasenia/:token', verAutenticacion, nuevaContrasenia);
-router.put('/usuario/:id', verAutenticacion, actualizarPerfil)
+router.post('/nueva-contrasenia/:token', nuevaContrasenia);
+router.put('/usuario/:id', verAutenticacion, actualizarPerfil);
+router.put('/actualizar-contrasenia', verAutenticacion, actualizarContrasenia);
 
 export default router;
