@@ -330,7 +330,7 @@ const cambiarPermisos = async (req, res) => {
         const { colabId, projectId } = req.params
 
         const { actualizar, eliminar } = req.body
-        const parametrosRequeridos = [crear, actualizar, visualizar, eliminar];
+        const parametrosRequeridos = [actualizar, eliminar];
         if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
 
         const permisos = [actualizar, eliminar];
