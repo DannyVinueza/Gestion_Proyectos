@@ -329,11 +329,11 @@ const cambiarPermisos = async (req, res) => {
     try {
         const { colabId, projectId } = req.params
 
-        const { crear, actualizar, visualizar, eliminar } = req.body
+        const { actualizar, eliminar } = req.body
         const parametrosRequeridos = [crear, actualizar, visualizar, eliminar];
         if (parametrosRequeridos.some(field => field === "" || field === undefined)) return res.status(400).json({ status: false, msg: 'Debe llenar todos los parametos requeridos' })
 
-        const permisos = [crear, actualizar, visualizar, eliminar];
+        const permisos = [actualizar, eliminar];
         if (permisos.some(permiso => typeof permiso !== 'boolean')) {
             return res.status(400).json({ status: false, msg: 'Los permisos deben ser valores booleanos true para dar permiso y false para no dar el permiso' });
         }
@@ -349,8 +349,8 @@ const cambiarPermisos = async (req, res) => {
         if (!projectUsers) return res.status(400).json({ status: false, msg: 'No se encontro el colaborador asociado al proyecto' })
 
         const permissionIdBD = await verificarOCrearPermiso({
-            read_project: visualizar,
-            create_project: crear,
+            read_project: true,
+            create_project: true,
             update_project: actualizar,
             delete_project: eliminar,
         });
