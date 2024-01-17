@@ -230,11 +230,18 @@ const crearProyecto = async (req, res) => {
             bibliographic_references: referencias_biblio
         })
 
+        const permissionIdBD = await verificarOCrearPermiso({
+            read_project: true,
+            create_project: true,
+            update_project: true,
+            delete_project: true,
+        });
+
         await Projects_Users.create({
             projectId: nuevoProyecto.id,
             userId: id_usuario,
             owner: 1,
-            permissionId: 1
+            permissionId: permissionIdBD
         })
         return res.status(200).json({ status: true, msg: 'Proyecto creado' })
     } catch (error) {
@@ -403,6 +410,37 @@ const eliminarProyecto = async (req, res) => {
         res.status(500).json({ status: false, msg: "Error interno del servidor", error })
     }
 }
+
+const verificarOCrearPermiso = async (permissionData) => {
+    try {
+        const { read_project, create_project, update_project, delete_project } = permissionData;
+
+        // Buscar un permiso existente con los mismos valores
+        const existingPermission = await Permissions.findOne({
+            where: {
+                read_project,
+                create_project,
+                update_project,
+                delete_project,
+            }
+        });
+
+        if (existingPermission) {
+            return existingPermission.id; // Devuelve el ID del permiso existente
+        } else {
+            // Si no existe, crea un nuevo permiso
+            const newPermission = await Permissions.create({
+                read_project,
+                create_project,
+                update_project,
+                delete_project,
+            });
+            return newPermission.id; // Devuelve el ID del nuevo permiso creado
+        }
+    } catch (error) {
+        throw new Error('Error al verificar o crear el permiso', error);
+    }
+};
 
 export {
     listarProyectos,
