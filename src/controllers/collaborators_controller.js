@@ -254,7 +254,7 @@ const rechazarSolicitudColaborador = async (req, res) => {
             }
         });
 
-        await aceptRejectionNotificationNewColaboradorProjectAdd(notiBD.collaborator, notiBD.project.title_project, 'rechazado')
+        await aceptRejectionNotificationNewColaboradorProject(notiBD.collaborator, notiBD.project.title_project, 'rechazado')
 
         res.status(200).json({ status: true, msg: "Rechazo de colaboración enviada" })
     }

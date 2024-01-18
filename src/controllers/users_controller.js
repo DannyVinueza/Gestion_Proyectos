@@ -117,6 +117,8 @@ const registro = async (req, res) => {
     
         const token = nuevoUsuario.crearToken()
     
+        await sendMailToUserTest(email, token);
+
         await Users.create({
             email_user: email,
             password_user: await nuevoUsuario.encrypPassword(contrasenia),
@@ -129,8 +131,7 @@ const registro = async (req, res) => {
             token: token
     
         })
-
-        await sendMailToUserTest(email, token);
+        
         res.status(200).json({ status: true, msg: "Usuario registrado" })
     }catch(error){
         console.log("Error al registrar al nuevo usuario ", error)
