@@ -461,7 +461,7 @@ const buscarProyectoOUser = async (req, res) => {
 const estadisticasProyectos = async (req, res) => {
     try {
         const userId = req.user.id;
-
+        console.log(userId)
         const resultados = await Projects_Users.findAll({
             where: {
                 userId: userId,
@@ -469,26 +469,32 @@ const estadisticasProyectos = async (req, res) => {
             },
             include: [{
                 model: Projects,
-                attributes: ['state']
+                attributes: ['state', 'createdAt']
             }]
         });
 
-        const proyectosPorEstado = {
-            1: 0,
-            2: 0,
-            3: 0,
-            4: 0
-        };
+        const estadisticasPorMes = {};
 
         resultados.forEach((row) => {
             const estadoProyecto = row.project.state;
-            proyectosPorEstado[estadoProyecto]++;
+            const mesProyecto = new Date(row.project.createdAt).getMonth() + 1;
+
+            
+            if (!estadisticasPorMes[mesProyecto]) {
+                estadisticasPorMes[mesProyecto] = {
+                    1: 0,
+                    2: 0,
+                    3: 0,
+                    4: 0,
+                    MES: obtenerNombreMes(mesProyecto)
+                };
+            }
+
+            estadisticasPorMes[mesProyecto][estadoProyecto]++;
         });
 
-        const proyectosResult = Object.keys(proyectosPorEstado).map((key) => ({
-            estado: parseInt(key),
-            proyectos: proyectosPorEstado[key]
-        }));
+        // Convertir el objeto de estadísticas por mes a un array
+        const proyectosResult = Object.values(estadisticasPorMes);
 
         res.status(200).json({ status: true, proyectos: proyectosResult });
     } catch (error) {
@@ -496,6 +502,15 @@ const estadisticasProyectos = async (req, res) => {
         res.status(500).json({ status: false, msg: "Error interno del servidor", error });
     }
 };
+
+// Función para obtener el nombre del mes
+function obtenerNombreMes(numeroMes) {
+    const nombresMeses = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    return nombresMeses[numeroMes - 1];
+}
 
 const verPermisoColaborador = async (req, res) => {
     try {
