@@ -5,6 +5,7 @@ import {
 import {
     cambiarPermisos,
     colaborarProyectoAniadir,
+    estadisticasProyectos,
     listarNotificaciones,
     verPermisoColaborador
 } from '../controllers/collaborators_controller.js';
@@ -212,5 +213,43 @@ describe('Ver permisos', function () {
             }
         }
         await verPermisoColaborador(req, res);
+    });
+});
+
+describe('Ver estadisticas', function () {
+    it('Ver las estadisticas del usuario con respecto a los proyectos', async function () {
+        // Creamos un objeto valido para enviarle a la funcion
+        let req = {
+            user: {
+              id: 1
+            }
+        };
+
+        // Creamos un objeto res con una funcion json para capturar la respuesta de la funcion
+        let res = {
+            status: function (code) {
+                //Usamos expect de chai para verificar el codigo de estado
+                expect(code).to.equal(200)
+                return this;
+            },
+            json: function (data) {
+                //Usamos expect de chai para verificar que el dato o datos sean los esperados
+                expect(data).to.have.all.keys('status', 'proyectos');
+                expect(data.status).to.be.true;
+                expect(data.proyectos).to.be.an('array');
+
+                expect(data.proyectos).to.have.lengthOf.above(0);
+                //Verificamos que tenga la estructura esperada
+                data.proyectos.forEach(proyecto => {
+                    expect(proyecto).to.have.all.keys('1', '2', '3', '4', 'MES');
+                    expect(proyecto['1']).to.be.a('number');
+                    expect(proyecto['2']).to.be.a('number');
+                    expect(proyecto['3']).to.be.a('number');
+                    expect(proyecto['4']).to.be.a('number');
+                    expect(proyecto['MES']).to.be.a('string');
+                });
+            }
+        }
+        await estadisticasProyectos(req, res);
     });
 });
