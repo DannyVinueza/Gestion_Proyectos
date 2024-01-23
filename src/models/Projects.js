@@ -17,7 +17,7 @@ const Projects = sequelize.define('projects',{
         allowNull:false,
     },
     description:{
-        type: DataTypes.STRING(300),
+        type: DataTypes.STRING(1200),
         allowNull: false,
     },
     link_image:{

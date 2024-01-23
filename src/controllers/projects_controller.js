@@ -5,7 +5,7 @@ import Users from "../models/Users.js";
 
 const MAX_TITLE = 200;
 const MAX_STATE = 1;
-const MAX_DESCRIPTION = 300;
+const MAX_DESCRIPTION = 1200;
 const MAX_LINK_IMAGEN = 160;
 const MAX_GENERAL_OBJETIVE = 1024;
 const MAX_SPECIFIC_OBJECT = 1024;
