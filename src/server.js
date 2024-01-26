@@ -22,7 +22,7 @@ app.use('/api', routerCollaborators);
 // Endpoints
 
 app.get('/',(req,res)=>{
-    res.json({info: 'Bienvenido a la API de gestion de proyectos'})
+    res.json({info: 'Bienvenido a la API de gestion de proyectos', msg: 'Seguir el siguiente url en donde se encuentra la documentacion de cada API', doc: 'https://documenter.getpostman.com/view/26764278/2s9YkjB3ck#intro'})
 })
 app.use((req,res)=>res.status(404).json({msg:"Endpoint no encontrado - 404"}))
 
