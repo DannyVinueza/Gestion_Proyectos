@@ -103,6 +103,8 @@ const colaborarProyectoAniadir = async (req, res) => {
 
         if (project_propietario.length === 0) return res.status(400).json({ status: false, msg: 'Lo sentimos el proyecto no tiene un propietario' })
 
+        await sendNotificationNewColaboradorProjectAdd(userCola, project_propietario[0].user, projectCola.title_project)
+        
         await Notifications.create({
             content: `Ha solicitado que se una en el proyecto: ${projectCola.title_project}`,
             projectId: projectCola.id,
@@ -110,8 +112,6 @@ const colaborarProyectoAniadir = async (req, res) => {
             collaborator_userId: userCola.id,
             owner_notification: userCola.id
         })
-
-        await sendNotificationNewColaboradorProjectAdd(userCola, project_propietario[0].user, projectCola.title_project)
 
         res.status(200).json({ status: true, msg: "Solicitud enviada" })
     }
@@ -148,7 +148,7 @@ const aceptarSolicitudColaborador = async (req, res) => {
             read_project: true,
             create_project: true,
             update_project: true,
-            delete_project: true
+            delete_project: false
         });
 
         await Projects_Users.create({
@@ -201,7 +201,7 @@ const aceptarSolicitudColaboradorAniadir = async (req, res) => {
             read_project: true,
             create_project: true,
             update_project: true,
-            delete_project: true
+            delete_project: false
         });
 
         await Projects_Users.create({
