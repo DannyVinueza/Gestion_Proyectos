@@ -36,8 +36,15 @@ const login = async (req, res) => {
         const verificarContrasenia = await userBDD.matchPassword(contrasenia)
         if (!verificarContrasenia) return res.status(404).json({ status: false, msg: "Lo sentimos, la contrasenia no es el correcto" })
 
-        const token = await generarJWT(userBDD.id)
+        const token = generarJWT(userBDD.id)
         const { id, full_name, university_name, cellphone_number, link_image, career, occupation } = userBDD
+
+        let tipoUser;
+        if(userBDD.email_user === 'gestionproyectos972@gmail.com'){
+            tipoUser = 'Admin'   
+        }else{
+            tipoUser = 'User'
+        }
 
 
         res.status(200).json({
@@ -49,9 +56,11 @@ const login = async (req, res) => {
             celular: cellphone_number,
             linkImagen: link_image,
             carrera: career,
-            ocupacion: occupation
+            ocupacion: occupation,
+            rol: tipoUser
         })
     } catch (error) {
+        console.log(error)
         res.status(500).json({ status: false, errorA: 'Error interno del servidor', error })
     }
 }

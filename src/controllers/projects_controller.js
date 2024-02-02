@@ -371,6 +371,17 @@ const eliminarProyecto = async (req, res) => {
 
         if (!projBDD) return res.status(400).json({ status: false, msg: 'El proyecto no se encuentra registrado' })
 
+        const verPermSuperUsuario = await Users.findOne({
+            where:{
+                id: req.user.id,
+            }
+        })
+
+        if(verPermSuperUsuario.email_user === 'gestionproyectos972@gmail.com'){
+            await projBDD.destroy()
+            return res.status(200).json({status: true, msg:'Se elimno el proyecto'})
+        }
+
         const verPerm = await Projects_Users.findOne({
             where:{
                 projectId: id,
