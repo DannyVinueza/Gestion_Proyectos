@@ -291,7 +291,7 @@ const rechazarSolicitudColaboradorAniadir = async (req, res) => {
             }
         });
 
-        await aceptRejectionNotificationNewColaboradorProjectAdd(notiBD.collaborator, notiBD.project.title_project, 'No ha aceptado ser conlaborador', notiBD.owner.email_user)
+        await aceptRejectionNotificationNewColaboradorProjectAdd(notiBD.collaborator, notiBD.project.title_project, 'No ha aceptado ser colaborador', notiBD.owner.email_user)
 
         res.status(200).json({ status: true, msg: "Rechazo de colaboración enviada" })
     }
