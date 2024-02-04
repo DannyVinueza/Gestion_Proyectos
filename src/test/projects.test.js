@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import {
+    actualizarProyecto,
     crearProyecto, listarProyectosColaboracion
 } from '../controllers/projects_controller.js'
 import {
@@ -7,6 +8,7 @@ import {
     colaborarProyectoAniadir,
     estadisticasProyectos,
     listarNotificaciones,
+    rechazarSolicitudColaboradorAniadir,
     verPermisoColaborador
 } from '../controllers/collaborators_controller.js';
 
@@ -251,5 +253,77 @@ describe('Ver estadisticas', function () {
             }
         }
         await estadisticasProyectos(req, res);
+    });
+});
+
+describe('Rechazar Colaboración', function () {
+    it('Rechazar invitación de un colaborador', async function () {
+        // Creamos un objeto valido para enviarle a la funcion
+        let req = {
+            user: {
+              id: 15
+            },
+            params: {
+                id: 12
+            }
+        };
+
+        // Creamos un objeto res con una funcion json para capturar la respuesta de la funcion
+        let res = {
+            status: function (code) {
+                //Usamos expect de chai para verificar el codigo de estado
+                expect(code).to.equal(200)
+                return this;
+            },
+            json: function (data) {
+                //Usamos expect de chai para verificar que el dato o datos sean los esperados
+                expect(data).to.have.all.keys('status', 'msg');
+                expect(data.status).to.be.true;
+                expect(data.msg).to.be.a('string');
+                expect(data.msg).to.equal('Rechazo de colaboración enviada')
+            }
+        }
+        await rechazarSolicitudColaboradorAniadir(req, res);
+    });
+});
+
+describe('Editar proyecto en colaboración', function () {
+    it('Editar un proyecto en colaboración', async function () {
+        // Creamos un objeto valido para enviarle a la funcion
+        let req = {
+            user: {
+                id: 15
+            },
+            params: {
+                id: 15
+            },
+            body: {
+                titulo: 'Titulo de prueba',
+                estado: 1,
+                descripcion: 'Este es un proyecto para realizar una prueba',
+                link_imagen: '',
+                objetivos_generales: ['Objetivo de prueba', 'Objetivo de prueba 2'],
+                objetivos_especificos: ['Objetivo especifico de prueba'],
+                alcance: 'El alcance es escrito para una prueba',
+                referencias_bibliograficas: ['Es una prueba', 'Segunda bibliografia de prueba']
+            }
+        };
+
+        // Creamos un objeto res con una funcion json para capturar la respuesta de la funcion
+        let res = {
+            status: function (code) {
+                //Usamos expect de chai para verificar el codigo de estado
+                expect(code).to.equal(200)
+                return this;
+            },
+            json: function (data) {
+                //Usamos expect de chai para verificar que el dato o datos sean los esperados
+                expect(data).to.have.all.keys('status', 'msg');
+                expect(data.status).to.be.true;
+                expect(data.msg).to.be.a('string');
+                expect(data.msg).to.equal('Proyecto actualizado')
+            }
+        }
+        await actualizarProyecto(req, res);
     });
 });

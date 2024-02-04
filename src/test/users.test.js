@@ -2,7 +2,8 @@ import { expect } from 'chai';
 import { 
     registro,
     actualizarPerfil,
-    login
+    login,
+    listarPerfil
 } from '../controllers/users_controller.js';
 
 
@@ -102,5 +103,33 @@ describe ('Iniciar sesión', function () {
             }
         }
         await login(req, res);
+    });
+});
+
+describe ('Ver perfil', function () {
+    it ('Ver el perfil del usuario', async function (){
+        // Creamos el objeto valido para pasar a la funcion
+        let req = {
+            params: {
+                id: 15
+            }
+        }
+
+        // Creammos el objeto res con una funcion json para capturar la respuesta de la funcion
+        let res = {
+            status: function(code){
+                //Verificamos el codigo de estado con expect de chai
+                expect(code).to.equal(200)
+                return this;
+            },
+            json: function(data){
+                //Verficamos que el dato sea el esperado con expect de chai
+                expect(data).to.have.all.keys('status', 'usuario')
+
+                expect(data.status).to.be.true;
+                expect(data.usuario).to.be.an('object');
+            }
+        }
+        await listarPerfil(req, res);
     });
 });
