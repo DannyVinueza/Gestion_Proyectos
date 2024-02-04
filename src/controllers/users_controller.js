@@ -385,6 +385,31 @@ const actualizarContrasenia = async (req, res) => {
     }
 }
 
+const eliminarUsuario = async (req, res) => {
+    try{
+        const { id } = req.params
+        const userBDD = await Users.findByPk(id)
+    
+        if (!userBDD) return res.status(400).json({ status: false, msg: 'El usuario no se encuentra registrado' })
+    
+        const verPermSuperUsuario = await Users.findOne({
+            where:{
+                id: req.user.id,
+            }
+        })
+    
+        if(verPermSuperUsuario.email_user === 'gestionproyectos972@gmail.com'){
+            await userBDD.destroy()
+            return res.status(200).json({status: true, msg:'Se eliminó el usuario'})
+        }else{
+            return res.status(200).json({status: false, msg:'No es administrador, para eliminar al usuario'})
+        }
+    }catch(error){
+        console.log(error)
+        res.status(500).json({ status: false, msg: "Error interno del servidor", error })
+    }
+}
+
 export {
     login,
     registro,
@@ -395,5 +420,6 @@ export {
     actualizarPerfil,
     actualizarContrasenia,
     listarPerfil,
-    listarUsuarios
+    listarUsuarios,
+    eliminarUsuario
 }

@@ -9,7 +9,8 @@ import {
         actualizarContrasenia, 
         recuperarContrasenia, 
         registro,
-        listarUsuarios 
+        listarUsuarios, 
+        eliminarUsuario
         } from "../controllers/users_controller.js";
 import verAutenticacion from "../middlewares/autenticacion.js";
 
@@ -25,5 +26,6 @@ router.post('/recuperar-contrasenia', recuperarContrasenia);
 router.post('/nueva-contrasenia/:token', nuevaContrasenia);
 router.put('/usuario/:id', verAutenticacion, actualizarPerfil);
 router.put('/actualizar-contrasenia', verAutenticacion, actualizarContrasenia);
+router.delete('/eliminar-usuario/:id', verAutenticacion, eliminarUsuario);
 
 export default router;
